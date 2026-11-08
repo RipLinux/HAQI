@@ -1,0 +1,1 @@
+"""HAQI backend application package."""

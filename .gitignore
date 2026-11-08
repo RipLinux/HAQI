@@ -74,6 +74,7 @@ postgres_data/
 qdrant_storage/
 qdrant_data/
 storage/
+mlflow_data/
 
 # Local-only data outputs (keep curated public samples under version control separately)
 data/raw/

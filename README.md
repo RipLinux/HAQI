@@ -53,7 +53,7 @@ The system is designed around three principles:
 | Arabic RTL frontend | 🟢 Prototype available | A live interface prototype is available for review. |
 | Chat responses | 🟡 Simulated | The current demo uses illustrative responses; it is not connected to live government data. |
 | Backend API | 🔧 MVP scope | FastAPI is part of the target architecture. |
-| Knowledge base & RAG | 🔧 MVP scope | Official-document ingestion, PostgreSQL, Qdrant, hybrid retrieval, and evidence validation are within the planned MVP scope. |
+| Knowledge base & RAG | 🔧 MVP scope | Official-document ingestion, PostgreSQL/pgvector, hybrid retrieval, and evidence validation are within the planned MVP scope. |
 
 <div dir="rtl" align="right">
 
@@ -135,7 +135,7 @@ haqi-civictech-ai/
 ├── LICENSE
 ├── .gitignore
 ├── .env.example
-├── docker-compose.yml
+├── compose.yaml
 │
 ├── docs/
 │   ├── HAQI_Full_Documentation.pdf
@@ -151,7 +151,8 @@ haqi-civictech-ai/
 │       └── styles/
 │
 ├── backend/
-│   ├── requirements.txt
+│   ├── pyproject.toml
+│   ├── uv.lock
 │   └── app/
 │       ├── main.py
 │       ├── core/
@@ -185,7 +186,7 @@ haqi-civictech-ai/
 | Frontend | React, TypeScript, Tailwind CSS | Responsive Arabic RTL user interface. |
 | Backend API | Python 3.11+, FastAPI, Pydantic | API endpoints, request handling, and data validation. |
 | Arabic NLP & AI | Transformers, Arabic sentence embeddings, LLM APIs | Text normalization, intent classification, query rewriting, and grounded generation. |
-| Vector retrieval | Qdrant | Dense semantic retrieval over document chunks. |
+| Vector retrieval | PostgreSQL + pgvector | Dense semantic retrieval over document chunks. |
 | Lexical retrieval | BM25 | Keyword-based retrieval to complement semantic search. |
 | Reranking | Cross-Encoder | Relevance reranking of retrieved passages. |
 | Relational database | PostgreSQL | Store source records, service information, citations, and review records. |
@@ -246,12 +247,12 @@ Copy-Item .env.example .env
 
 **Never commit `.env` or real API keys, passwords, database credentials, or tokens.**
 
-### 3. Start supporting services
+### 3. Start the development stack
 
-Run this from the repository root, provided the Compose file defines services named `postgres` and `qdrant`:
+Run this from the repository root:
 
 ```bash
-docker compose up -d postgres qdrant
+docker compose up --build
 ```
 
 ### 4. Set up the backend
@@ -274,13 +275,15 @@ source .venv/bin/activate
 Install dependencies and start the API:
 
 ```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uv sync --extra dev
+uv run uvicorn app.main:app --reload --port 8000
 ```
 
 When the API is running, open the interactive documentation at:
 
 [http://localhost:8000/docs](http://localhost:8000/docs)
+
+The process health endpoint is [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health). It reports only that the API process is running.
 
 ### 5. Set up the frontend
 
@@ -294,7 +297,9 @@ npm run dev
 
 Use the local URL printed by the frontend development server.
 
-> These commands assume the corresponding backend, frontend, dependency files, and Docker Compose services are present and configured in the checked-out repository.
+> Chat and government-service routes intentionally return `501 Not Implemented` until later project stages.
+
+See [`docs/setup.md`](docs/setup.md), [`docs/architecture.md`](docs/architecture.md), and [`docs/data-contracts.md`](docs/data-contracts.md) for the foundation details.
 
 ## 📊 Evaluation Methodology | منهجية التقييم
 

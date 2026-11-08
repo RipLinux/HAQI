@@ -1,0 +1,9 @@
+# Replace placeholders with verified GitHub handles before enabling ownership rules.
+/backend/app/modules/rag/ @RAG_OWNER_TODO
+/backend/app/modules/ingestion/ @INGESTION_OWNER_TODO
+/backend/app/modules/nlp/ @NLP_OWNER_TODO
+/backend/app/modules/retrieval/ @RETRIEVAL_OWNER_TODO
+/backend/app/api/ @BACKEND_OWNER_TODO
+/backend/app/core/ @BACKEND_OWNER_TODO
+/backend/app/db/ @BACKEND_OWNER_TODO
+/frontend/ @FRONTEND_OWNER_TODO
