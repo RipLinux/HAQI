@@ -1,0 +1,2 @@
+{"query_id":"synthetic-1","query_text":"how to renew a document","relevant_chunk_ids":["chunk-a"],"relevance":{"chunk-a":2}}
+{"query_id":"synthetic-2","query_text":"كيفية تجديد مستند","relevant_chunk_ids":["chunk-b"],"relevance":{"chunk-b":2}}

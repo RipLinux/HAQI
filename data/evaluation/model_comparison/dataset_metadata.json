@@ -1,0 +1,33 @@
+{
+  "dataset_id": "haqi-model-comparison-synthetic-v1",
+  "version": "1.0.0",
+  "status": "machine_generated",
+  "review_status": "pending_human_review",
+  "synthetic": true,
+  "chunk_count": 50,
+  "query_count": 40,
+  "languages": ["ar_msa", "ar_egy", "en"],
+  "categories": [
+    "permit",
+    "appointment",
+    "document",
+    "payment",
+    "complaint",
+    "renewal",
+    "status",
+    "accessibility",
+    "address",
+    "notification"
+  ],
+  "relevance_scale": {
+    "0": "not relevant",
+    "1": "partially relevant",
+    "2": "highly relevant"
+  },
+  "generator": "scripts/generate_model_comparison_dataset.py",
+  "limitations": [
+    "No human relevance review has been performed.",
+    "Synthetic language does not establish production Arabic or Egyptian dialect quality.",
+    "The fictional service rules must not be used as operational guidance."
+  ]
+}

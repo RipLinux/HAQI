@@ -1,0 +1,40 @@
+{"query_id": "q-01-1", "query": "ما هي معلومات تصريح خدمة في الخدمة التجريبية؟", "language": "ar_msa", "category": "permit", "review_status": "pending_human_review"}
+{"query_id": "q-01-2", "query": "عايز أعرف تفاصيل تصريح خدمة في الخدمة التجريبية", "language": "ar_egy", "category": "permit", "review_status": "pending_human_review"}
+{"query_id": "q-01-3", "query": "How do I use the fictional service permit service?", "language": "en", "category": "permit", "review_status": "pending_human_review"}
+{"query_id": "q-01-4", "query": "service permit information and service details", "language": "en", "category": "permit", "review_status": "pending_human_review"}
+{"query_id": "q-02-1", "query": "ما هي معلومات موعد خدمة في الخدمة التجريبية؟", "language": "ar_msa", "category": "appointment", "review_status": "pending_human_review"}
+{"query_id": "q-02-2", "query": "عايز أعرف تفاصيل موعد خدمة في الخدمة التجريبية", "language": "ar_egy", "category": "appointment", "review_status": "pending_human_review"}
+{"query_id": "q-02-3", "query": "How do I use the fictional service appointment service?", "language": "en", "category": "appointment", "review_status": "pending_human_review"}
+{"query_id": "q-02-4", "query": "service appointment information and service details", "language": "en", "category": "appointment", "review_status": "pending_human_review"}
+{"query_id": "q-03-1", "query": "ما هي معلومات مستند مطلوب في الخدمة التجريبية؟", "language": "ar_msa", "category": "document", "review_status": "pending_human_review"}
+{"query_id": "q-03-2", "query": "عايز أعرف تفاصيل مستند مطلوب في الخدمة التجريبية", "language": "ar_egy", "category": "document", "review_status": "pending_human_review"}
+{"query_id": "q-03-3", "query": "How do I use the fictional required document service?", "language": "en", "category": "document", "review_status": "pending_human_review"}
+{"query_id": "q-03-4", "query": "required document information and service details", "language": "en", "category": "document", "review_status": "pending_human_review"}
+{"query_id": "q-04-1", "query": "ما هي معلومات دفع الرسوم في الخدمة التجريبية؟", "language": "ar_msa", "category": "payment", "review_status": "pending_human_review"}
+{"query_id": "q-04-2", "query": "عايز أعرف تفاصيل دفع الرسوم في الخدمة التجريبية", "language": "ar_egy", "category": "payment", "review_status": "pending_human_review"}
+{"query_id": "q-04-3", "query": "How do I use the fictional fee payment service?", "language": "en", "category": "payment", "review_status": "pending_human_review"}
+{"query_id": "q-04-4", "query": "fee payment information and service details", "language": "en", "category": "payment", "review_status": "pending_human_review"}
+{"query_id": "q-05-1", "query": "ما هي معلومات شكوى خدمة في الخدمة التجريبية؟", "language": "ar_msa", "category": "complaint", "review_status": "pending_human_review"}
+{"query_id": "q-05-2", "query": "عايز أعرف تفاصيل شكوى خدمة في الخدمة التجريبية", "language": "ar_egy", "category": "complaint", "review_status": "pending_human_review"}
+{"query_id": "q-05-3", "query": "How do I use the fictional service complaint service?", "language": "en", "category": "complaint", "review_status": "pending_human_review"}
+{"query_id": "q-05-4", "query": "service complaint information and service details", "language": "en", "category": "complaint", "review_status": "pending_human_review"}
+{"query_id": "q-06-1", "query": "ما هي معلومات تجديد الخدمة في الخدمة التجريبية؟", "language": "ar_msa", "category": "renewal", "review_status": "pending_human_review"}
+{"query_id": "q-06-2", "query": "عايز أعرف تفاصيل تجديد الخدمة في الخدمة التجريبية", "language": "ar_egy", "category": "renewal", "review_status": "pending_human_review"}
+{"query_id": "q-06-3", "query": "How do I use the fictional service renewal service?", "language": "en", "category": "renewal", "review_status": "pending_human_review"}
+{"query_id": "q-06-4", "query": "service renewal information and service details", "language": "en", "category": "renewal", "review_status": "pending_human_review"}
+{"query_id": "q-07-1", "query": "ما هي معلومات حالة الطلب في الخدمة التجريبية؟", "language": "ar_msa", "category": "status", "review_status": "pending_human_review"}
+{"query_id": "q-07-2", "query": "عايز أعرف تفاصيل حالة الطلب في الخدمة التجريبية", "language": "ar_egy", "category": "status", "review_status": "pending_human_review"}
+{"query_id": "q-07-3", "query": "How do I use the fictional application status service?", "language": "en", "category": "status", "review_status": "pending_human_review"}
+{"query_id": "q-07-4", "query": "application status information and service details", "language": "en", "category": "status", "review_status": "pending_human_review"}
+{"query_id": "q-08-1", "query": "ما هي معلومات دعم الإتاحة في الخدمة التجريبية؟", "language": "ar_msa", "category": "accessibility", "review_status": "pending_human_review"}
+{"query_id": "q-08-2", "query": "عايز أعرف تفاصيل دعم الإتاحة في الخدمة التجريبية", "language": "ar_egy", "category": "accessibility", "review_status": "pending_human_review"}
+{"query_id": "q-08-3", "query": "How do I use the fictional accessibility support service?", "language": "en", "category": "accessibility", "review_status": "pending_human_review"}
+{"query_id": "q-08-4", "query": "accessibility support information and service details", "language": "en", "category": "accessibility", "review_status": "pending_human_review"}
+{"query_id": "q-09-1", "query": "ما هي معلومات عنوان المركز في الخدمة التجريبية؟", "language": "ar_msa", "category": "address", "review_status": "pending_human_review"}
+{"query_id": "q-09-2", "query": "عايز أعرف تفاصيل عنوان المركز في الخدمة التجريبية", "language": "ar_egy", "category": "address", "review_status": "pending_human_review"}
+{"query_id": "q-09-3", "query": "How do I use the fictional center address service?", "language": "en", "category": "address", "review_status": "pending_human_review"}
+{"query_id": "q-09-4", "query": "center address information and service details", "language": "en", "category": "address", "review_status": "pending_human_review"}
+{"query_id": "q-10-1", "query": "ما هي معلومات إشعار الخدمة في الخدمة التجريبية؟", "language": "ar_msa", "category": "notification", "review_status": "pending_human_review"}
+{"query_id": "q-10-2", "query": "عايز أعرف تفاصيل إشعار الخدمة في الخدمة التجريبية", "language": "ar_egy", "category": "notification", "review_status": "pending_human_review"}
+{"query_id": "q-10-3", "query": "How do I use the fictional service notification service?", "language": "en", "category": "notification", "review_status": "pending_human_review"}
+{"query_id": "q-10-4", "query": "service notification information and service details", "language": "en", "category": "notification", "review_status": "pending_human_review"}

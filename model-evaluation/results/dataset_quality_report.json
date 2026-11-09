@@ -1,0 +1,41 @@
+{
+  "dataset_id": "haqi-model-comparison-synthetic-v1",
+  "dataset_version": "1.0.0",
+  "status": "machine_generated",
+  "review_status": "pending_human_review",
+  "synthetic_records_are_not_official_information": true,
+  "total_chunks": 50,
+  "total_queries": 40,
+  "total_judgments": 40,
+  "queries_by_language": {
+    "ar_egy": 10,
+    "ar_msa": 10,
+    "en": 20
+  },
+  "queries_by_category": {
+    "accessibility": 4,
+    "address": 4,
+    "appointment": 4,
+    "complaint": 4,
+    "document": 4,
+    "notification": 4,
+    "payment": 4,
+    "permit": 4,
+    "renewal": 4,
+    "status": 4
+  },
+  "relevant_chunks_per_query": {
+    "minimum": 2,
+    "maximum": 2,
+    "average": 2.0
+  },
+  "queries_with_no_relevant_chunks": [],
+  "duplicate_chunk_ids": [],
+  "duplicate_query_ids": [],
+  "duplicate_judgments": [],
+  "missing_query_references": [],
+  "missing_chunk_references": [],
+  "invalid_relevance_grades": [],
+  "human_review_completion_percent": 0.0,
+  "review_sheet": "model-evaluation\\results\\dataset_review_sheet.csv"
+}

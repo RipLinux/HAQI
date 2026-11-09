@@ -1,0 +1,224 @@
+{
+  "dataset_queries": 40,
+  "indexed_chunks": 50,
+  "methods": {
+    "vector": {
+      "ar_msa": {
+        "recall": 0.95,
+        "precision": 0.38,
+        "mrr": 0.7,
+        "ndcg": 0.7665036495456745,
+        "recall10": 1.0,
+        "precision10": 0.2,
+        "mrr10": 0.7,
+        "ndcg10": 0.7756840346248806,
+        "latency_average_ms": 68.85451999996803,
+        "latency_p50_ms": 69.11494999985734,
+        "latency_p95_ms": 82.18555500011462
+      },
+      "ar_egy": {
+        "recall": 0.85,
+        "precision": 0.34,
+        "mrr": 0.6783333333333333,
+        "ndcg": 0.6970472737921133,
+        "recall10": 0.95,
+        "precision10": 0.19,
+        "mrr10": 0.6783333333333333,
+        "ndcg10": 0.7149159260148916,
+        "latency_average_ms": 69.48932999994213,
+        "latency_p50_ms": 69.4260000000213,
+        "latency_p95_ms": 86.60403999997469
+      },
+      "en": {
+        "recall": 1.0,
+        "precision": 0.4,
+        "mrr": 0.8,
+        "ndcg": 0.7588592113866343,
+        "recall10": 1.0,
+        "precision10": 0.2,
+        "mrr10": 0.8,
+        "ndcg10": 0.7588592113866343,
+        "latency_average_ms": 72.11124000009477,
+        "latency_p50_ms": 66.13045000040074,
+        "latency_p95_ms": 114.7154700000101
+      },
+      "overall": {
+        "recall": 0.95,
+        "precision": 0.38,
+        "mrr": 0.7445833333333334,
+        "ndcg": 0.7453173365277641,
+        "recall10": 0.9875,
+        "precision10": 0.1975,
+        "mrr10": 0.7445833333333334,
+        "ndcg10": 0.7520795958532601,
+        "latency_average_ms": 70.64158250002492,
+        "latency_p50_ms": 67.97165000034511,
+        "latency_p95_ms": 92.88106499957387
+      }
+    },
+    "keyword": {
+      "ar_msa": {
+        "recall": 0.0,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "recall10": 0.0,
+        "precision10": 0.0,
+        "mrr10": 0.0,
+        "ndcg10": 0.0,
+        "latency_average_ms": 1.753499999995256,
+        "latency_p50_ms": 1.7449500001021079,
+        "latency_p95_ms": 2.6399849999052085
+      },
+      "ar_egy": {
+        "recall": 0.0,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "recall10": 0.0,
+        "precision10": 0.0,
+        "mrr10": 0.0,
+        "ndcg10": 0.0,
+        "latency_average_ms": 1.6872099999091006,
+        "latency_p50_ms": 1.703200000065408,
+        "latency_p95_ms": 2.1862400000827615
+      },
+      "en": {
+        "recall": 0.0,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "recall10": 0.0,
+        "precision10": 0.0,
+        "mrr10": 0.0,
+        "ndcg10": 0.0,
+        "latency_average_ms": 1.8063799999254115,
+        "latency_p50_ms": 1.70574999992823,
+        "latency_p95_ms": 3.036269999756769
+      },
+      "overall": {
+        "recall": 0.0,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "recall10": 0.0,
+        "precision10": 0.0,
+        "mrr10": 0.0,
+        "ndcg10": 0.0,
+        "latency_average_ms": 1.763367499938795,
+        "latency_p50_ms": 1.7168499994113517,
+        "latency_p95_ms": 3.0065800003285403
+      }
+    },
+    "hybrid": {
+      "ar_msa": {
+        "recall": 0.95,
+        "precision": 0.38,
+        "mrr": 0.7,
+        "ndcg": 0.7665036495456745,
+        "recall10": 1.0,
+        "precision10": 0.2,
+        "mrr10": 0.7,
+        "ndcg10": 0.7756840346248806,
+        "latency_average_ms": 70.63342000001285,
+        "latency_p50_ms": 70.50479999952586,
+        "latency_p95_ms": 84.12524000000303
+      },
+      "ar_egy": {
+        "recall": 0.85,
+        "precision": 0.34,
+        "mrr": 0.6783333333333333,
+        "ndcg": 0.6970472737921133,
+        "recall10": 0.95,
+        "precision10": 0.19,
+        "mrr10": 0.6783333333333333,
+        "ndcg10": 0.7149159260148916,
+        "latency_average_ms": 71.2009500000022,
+        "latency_p50_ms": 70.99685000048339,
+        "latency_p95_ms": 88.11619499988409
+      },
+      "en": {
+        "recall": 1.0,
+        "precision": 0.4,
+        "mrr": 0.8,
+        "ndcg": 0.7588592113866343,
+        "recall10": 1.0,
+        "precision10": 0.2,
+        "mrr10": 0.8,
+        "ndcg10": 0.7588592113866343,
+        "latency_average_ms": 73.94033500013393,
+        "latency_p50_ms": 67.85265000007712,
+        "latency_p95_ms": 116.40269500048817
+      },
+      "overall": {
+        "recall": 0.95,
+        "precision": 0.38,
+        "mrr": 0.7445833333333334,
+        "ndcg": 0.7453173365277641,
+        "recall10": 0.9875,
+        "precision10": 0.1975,
+        "mrr10": 0.7445833333333334,
+        "ndcg10": 0.7520795958532601,
+        "latency_average_ms": 72.42876000007072,
+        "latency_p50_ms": 69.70400000045629,
+        "latency_p95_ms": 94.11336999969528
+      }
+    },
+    "reranked": {
+      "ar_msa": {
+        "recall": 1.0,
+        "precision": 0.4,
+        "mrr": 0.8833333333333334,
+        "ndcg": 0.874269270552762,
+        "recall10": 1.0,
+        "precision10": 0.2,
+        "mrr10": 0.8833333333333334,
+        "ndcg10": 0.874269270552762,
+        "latency_average_ms": 247.62507000023106,
+        "latency_p50_ms": 242.04145000021526,
+        "latency_p95_ms": 378.2513050000489
+      },
+      "ar_egy": {
+        "recall": 0.95,
+        "precision": 0.38,
+        "mrr": 0.8833333333333334,
+        "ndcg": 0.8496808229289486,
+        "recall10": 0.95,
+        "precision10": 0.19,
+        "mrr10": 0.8833333333333334,
+        "ndcg10": 0.8496808229289486,
+        "latency_average_ms": 243.54013000038321,
+        "latency_p50_ms": 238.29545000080543,
+        "latency_p95_ms": 354.7562150008616
+      },
+      "en": {
+        "recall": 1.0,
+        "precision": 0.4,
+        "mrr": 0.975,
+        "ndcg": 0.9463766100903712,
+        "recall10": 1.0,
+        "precision10": 0.2,
+        "mrr10": 0.975,
+        "ndcg10": 0.9463766100903712,
+        "latency_average_ms": 256.8404500002089,
+        "latency_p50_ms": 236.9602499998109,
+        "latency_p95_ms": 436.7823649998173
+      },
+      "overall": {
+        "recall": 0.9875,
+        "precision": 0.395,
+        "mrr": 0.9291666666666666,
+        "ndcg": 0.9041758284156133,
+        "recall10": 0.9875,
+        "precision10": 0.1975,
+        "mrr10": 0.9291666666666666,
+        "ndcg10": 0.9041758284156133,
+        "latency_average_ms": 251.211525000258,
+        "latency_p50_ms": 238.29545000080543,
+        "latency_p95_ms": 387.82732999966345
+      }
+    }
+  },
+  "model_id": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "schema": "retrieval_model_comparison_minilm"
+}
