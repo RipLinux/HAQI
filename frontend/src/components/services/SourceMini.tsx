@@ -1,0 +1,3 @@
+import Badge from "../common/Badge";
+function SourceMini(){return <div className="source-mini"><div><b>1. الموقع الرسمي لوزارة الداخلية</b><Badge kind="verified">رابط رسمي للتحقق</Badge><p>وزارة الداخلية · لم تتم المراجعة في النموذج</p><a href="https://moi.gov.eg/" target="_blank" rel="noreferrer">moi.gov.eg ↗</a></div><div><b>2. منصة مصر الرقمية</b><Badge kind="verified">رابط رسمي للتحقق</Badge><p>منصة حكومية رسمية · لم تتم المراجعة في النموذج</p><a href="https://digital.gov.eg/" target="_blank" rel="noreferrer">digital.gov.eg ↗</a></div><div><b>3. دليل إجراءات (عيّنة)</b><Badge kind="warning">مصدر عيّنة</Badge><p>اسم جهة توضيحي · بدون رابط</p></div></div>}
+export default SourceMini;
