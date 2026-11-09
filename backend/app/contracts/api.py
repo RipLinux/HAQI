@@ -1,4 +1,4 @@
-"""Public API request and response schemas."""
+﻿"""Public API request and response schemas."""
 
 from app.contracts.answers import Answer
 from app.contracts.common import ContractModel

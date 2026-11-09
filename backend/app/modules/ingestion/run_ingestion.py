@@ -1,12 +1,11 @@
 import json
 from pathlib import Path
 
-from .extractors.pdf_extractor import extract_pdf
-from .extractors.html_extractor import extract_html
-from .cleaners.arabic_cleaner import clean_arabic_text
 from .chunkers.document_chunker import chunk_text
+from .cleaners.arabic_cleaner import clean_arabic_text
+from .extractors.html_extractor import extract_html
+from .extractors.pdf_extractor import extract_pdf
 from .metadata.metadata_builder import build_chunk_metadata
-
 
 # تحديد مكان المشروع
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
