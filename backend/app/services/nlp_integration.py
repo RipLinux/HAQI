@@ -9,11 +9,11 @@ Integrates Ahmed Rabie's Arabic NLP pipeline into the HAQI Backend:
 """
 
 import re
-from typing import Any, Dict, List, Optional
+
 from app.schemas import NLPAnalysisResult
 
 # Egyptian Colloquial to Formal Government Terminology Mapping (Slide 9)
-EGYPTIAN_DIALECT_MAP: Dict[str, str] = {
+EGYPTIAN_DIALECT_MAP: dict[str, str] = {
     "بطاقه": "بطاقة الرقم القومي",
     "بطاقة": "بطاقة الرقم القومي",
     "البطاقه": "بطاقة الرقم القومي",
@@ -99,7 +99,7 @@ class ArabicNLPService:
     def analyze_query(
         self,
         user_query: str,
-        pending_intent: Optional[str] = None,
+        pending_intent: str | None = None,
         awaiting_clarification: bool = False,
     ) -> NLPAnalysisResult:
         raw = user_query.strip()
@@ -131,7 +131,7 @@ class ArabicNLPService:
                 )
 
         # Detect dialect terms mapped to official concepts
-        detected_dialect: Dict[str, str] = {}
+        detected_dialect: dict[str, str] = {}
         for colloq, formal in EGYPTIAN_DIALECT_MAP.items():
             if normalize_arabic_text(colloq) in norm or colloq in raw:
                 detected_dialect[colloq] = formal
@@ -149,7 +149,7 @@ class ArabicNLPService:
         # Intent & Sub-type Classification
         intent = "unknown"
         intent_ar = "غير محدد (Unknown Intent)"
-        sub_type: Optional[str] = "general"
+        sub_type: str | None = "general"
         sector = "غير محدد"
 
         if any(w in norm for w in ("بطاقه", "بطاقتي", "رقم قومي", "الرقم القومي")):
@@ -181,7 +181,7 @@ class ArabicNLPService:
         # Determine if Clarification is needed (Slide 7 Step 4 & Slide 16 Example)
         needs_clarification = False
         clarification_question = None
-        clarification_options: List[str] = []
+        clarification_options: list[str] = []
 
         if intent == "national_id_application" and sub_type is None and not is_legal:
             needs_clarification = True
@@ -220,7 +220,7 @@ class ArabicNLPService:
             is_out_of_scope=(is_oos or (intent == "unknown" and not is_legal)),
         )
 
-    def _detect_nid_subtype(self, raw: str, norm: str) -> Optional[str]:
+    def _detect_nid_subtype(self, raw: str, norm: str) -> str | None:
         if any(
             w in norm
             for w in ("اول مره", "لاول مره", "جديده", "15 سنه", "15 عام", "طالب", "سن 15")
@@ -247,7 +247,7 @@ class ArabicNLPService:
         return None
 
     def _build_structured_query(
-        self, intent: str, sub_type: Optional[str], sector: str, fallback_norm: str
+        self, intent: str, sub_type: str | None, sector: str, fallback_norm: str
     ) -> str:
         if intent == "national_id_application":
             if sub_type == "first_time":

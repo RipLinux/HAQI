@@ -7,9 +7,9 @@ Matches Slides 6, 8, 9, 13, 16, and 21:
 Includes all 8 Metadata Schema fields from Slide 13.
 """
 
-from typing import Any, Dict, List
+from typing import Any
 
-OFFICIAL_DOCUMENTS_SEED: List[Dict[str, Any]] = [
+OFFICIAL_DOCUMENTS_SEED: list[dict[str, Any]] = [
     {
         "doc_code": "CSO-NID-2025-V3",
         "title": "دليل خدمات وإجراءات بطاقة الرقم القومي — قطاع الأحوال المدنية",
@@ -78,7 +78,7 @@ OFFICIAL_DOCUMENTS_SEED: List[Dict[str, Any]] = [
 ]
 
 
-SERVICE_CHUNKS_SEED: List[Dict[str, Any]] = [
+SERVICE_CHUNKS_SEED: list[dict[str, Any]] = [
     # 1. National ID - First Time (استخراج بطاقة رقم قومي لأول مرة)
     {
         "chunk_id": "CHUNK-NID-FIRST",

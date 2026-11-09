@@ -11,7 +11,7 @@ import json
 import math
 import os
 import uuid
-from typing import Any, Dict, List
+from typing import Any
 
 from app.database import db_manager
 from app.schemas import ChatRequest, EvaluationMetricsSummary
@@ -30,7 +30,7 @@ class SystemEvaluator:
             )
         self.dataset_path = dataset_path
 
-    def load_dataset(self) -> Dict[str, Any]:
+    def load_dataset(self) -> dict[str, Any]:
         with open(self.dataset_path, "r", encoding="utf-8") as f:
             return json.load(f)
 
@@ -39,20 +39,20 @@ class SystemEvaluator:
         dataset_version = data.get("dataset_version", "HAQI-Bench-v1.0")
         cases = data.get("cases", [])
 
-        recall_scores: List[float] = []
-        mrr_scores: List[float] = []
-        ndcg_scores: List[float] = []
+        recall_scores: list[float] = []
+        mrr_scores: list[float] = []
+        ndcg_scores: list[float] = []
 
-        faithfulness_scores: List[float] = []
-        accuracy_scores: List[float] = []
-        citation_precision_scores: List[float] = []
+        faithfulness_scores: list[float] = []
+        accuracy_scores: list[float] = []
+        citation_precision_scores: list[float] = []
 
-        abstention_decisions_correct: List[float] = []
-        unsupported_claim_rates: List[float] = []
+        abstention_decisions_correct: list[float] = []
+        unsupported_claim_rates: list[float] = []
 
-        retrieval_times: List[float] = []
-        response_latencies: List[float] = []
-        case_results: List[Dict[str, Any]] = []
+        retrieval_times: list[float] = []
+        response_latencies: list[float] = []
+        case_results: list[dict[str, Any]] = []
 
         for case in cases:
             case_id = case["case_id"]
@@ -151,7 +151,7 @@ class SystemEvaluator:
                 }
             )
 
-        def avg(vals: List[float]) -> float:
+        def avg(vals: list[float]) -> float:
             return round(sum(vals) / len(vals), 4) if vals else 0.0
 
         run_id = f"eval_{uuid.uuid4().hex[:10]}"

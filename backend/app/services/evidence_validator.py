@@ -10,7 +10,7 @@ Developed by Maha in collaboration with Hassan (RAG Lead):
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from app.config import settings
@@ -25,8 +25,8 @@ class EvidenceValidationService:
     def validate_evidence(
         self,
         nlp_result: NLPAnalysisResult,
-        retrieved_chunks: List[Dict[str, Any]],
-        proposed_answer: Optional[str] = None,
+        retrieved_chunks: list[dict[str, Any]],
+        proposed_answer: str | None = None,
     ) -> EvidenceValidationReport:
         # 1. Guardrail: Legal Fatwa / Litigation Strategy Request -> Immediate Safe Abstention (Slide 19)
         if nlp_result.is_legal_opinion_request:
@@ -155,7 +155,7 @@ class EvidenceValidationService:
             abstention_reason=None,
         )
 
-    def _verify_source_authority(self, chunk: Dict[str, Any]) -> bool:
+    def _verify_source_authority(self, chunk: dict[str, Any]) -> bool:
         if not chunk.get("is_official_verified", False):
             return False
         authority = chunk.get("authority", "")
@@ -166,7 +166,7 @@ class EvidenceValidationService:
         auth_ok = any(ta in authority for ta in settings.trusted_authorities)
         return domain_ok and auth_ok
 
-    def _check_source_freshness(self, chunk: Dict[str, Any]) -> str:
+    def _check_source_freshness(self, chunk: dict[str, Any]) -> str:
         last_updated_str = chunk.get("last_updated", "2025-01-01")
         try:
             updated_dt = datetime.strptime(last_updated_str, "%Y-%m-%d")
@@ -178,8 +178,8 @@ class EvidenceValidationService:
             return "verified_up_to_date"
 
     def _detect_contradictions(
-        self, query_text: str, chunks: List[Dict[str, Any]]
-    ) -> tuple[bool, Optional[str]]:
+        self, query_text: str, chunks: list[dict[str, Any]]
+    ) -> tuple[bool, str | None]:
         """Detects if two high-scoring chunks for the exact same intent & subtype contradict on fees or steps."""
         if len(chunks) < 2:
             return False, None
@@ -205,7 +205,7 @@ class EvidenceValidationService:
         return False, None
 
     def _compute_grounding_score(
-        self, top_chunk: Dict[str, Any], proposed_answer: Optional[str] = None
+        self, top_chunk: dict[str, Any], proposed_answer: str | None = None
     ) -> float:
         if not proposed_answer:
             # Grounded generation directly from verified chunk structure has 1.0 faithfulness

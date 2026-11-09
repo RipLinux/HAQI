@@ -4,7 +4,7 @@ FastAPI Backend Application, Database Integration, Evidence Validation & Evaluat
 Lead Developer: Maha — Backend, Database & Evaluation
 """
 
-from typing import List, Optional
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -104,7 +104,7 @@ def process_chat_query(request: ChatRequest):
 # 3. User & Session Management Endpoints (Slide 19: Privacy & Data Minimization)
 # ============================================================================
 @app.post("/api/v1/sessions", tags=["Users & Sessions"])
-def create_or_get_session(user_id: str = "guest_user", session_id: Optional[str] = None):
+def create_or_get_session(user_id: str = "guest_user", session_id: str | None = None):
     session = db_manager.get_or_create_session(user_id=user_id, session_id=session_id)
     return {"status": "success", "session": session}
 
@@ -135,7 +135,7 @@ def delete_user_session(session_id: str):
 # ============================================================================
 @app.get("/api/v1/services", tags=["Government Services Explorer"])
 def list_government_services(
-    category: Optional[str] = Query(default=None, description="تصفية حسب فئة الخدمة")
+    category: str | None = Query(default=None, description="تصفية حسب فئة الخدمة")
 ):
     """Lists all structured government procedures for the Frontend Procedure Navigator."""
     chunks = db_manager.get_all_chunks_with_docs(service_category=category)
@@ -167,7 +167,7 @@ def list_government_services(
 @app.get("/api/v1/services/{service_slug}", tags=["Government Services Explorer"])
 def get_service_procedure(
     service_slug: str,
-    sub_type: Optional[str] = Query(default=None, description="first_time | renewal | replacement | general"),
+    sub_type: str | None = Query(default=None, description="first_time | renewal | replacement | general"),
 ):
     matches = db_manager.get_service_by_slug(service_slug=service_slug, sub_type=sub_type)
     if not matches:
@@ -191,11 +191,11 @@ def check_service_eligibility_and_documents(
         raise HTTPException(status_code=404, detail=f"Service '{service_slug}' not found")
 
     target = matches[0]
-    req_docs: List[str] = target["required_documents"]
+    req_docs: list[str] = target["required_documents"]
     user_docs_norm = [normalize_arabic_text(d) for d in request.available_documents]
 
-    matched_docs: List[str] = []
-    missing_docs: List[str] = []
+    matched_docs: list[str] = []
+    missing_docs: list[str] = []
     for req_doc in req_docs:
         req_norm = normalize_arabic_text(req_doc)
         req_tokens = [t for t in req_norm.split() if len(t) > 2]
@@ -251,10 +251,10 @@ def check_service_eligibility_and_documents(
 # ============================================================================
 @app.get(
     "/api/v1/documents",
-    response_model=List[DocumentMetadataSchema],
+    response_model=list[DocumentMetadataSchema],
     tags=["Knowledge Base & Metadata Registry"],
 )
-def list_official_documents(category: Optional[str] = None):
+def list_official_documents(category: str | None = None):
     """Returns all official government documents with the 8 Metadata Schema fields (Slide 13)."""
     return db_manager.list_documents(service_category=category)
 

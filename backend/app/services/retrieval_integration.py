@@ -11,7 +11,7 @@ Integrates Anas's Retrieval Pipeline into the HAQI Backend:
 
 import math
 from collections import Counter
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.database import db_manager
 from app.schemas import NLPAnalysisResult
@@ -28,10 +28,10 @@ class HybridRetrievalService:
     def retrieve_and_rerank(
         self,
         nlp_result: NLPAnalysisResult,
-        service_category_filter: Optional[str] = None,
+        service_category_filter: str | None = None,
         top_k: int = 3,
-        custom_chunks: Optional[List[Dict[str, Any]]] = None,
-    ) -> List[Dict[str, Any]]:
+        custom_chunks: list[dict[str, Any]] | None = None,
+    ) -> list[dict[str, Any]]:
         # Stage 3: Metadata Filtering (Filter by Service Category if requested)
         candidates = (
             custom_chunks
@@ -45,7 +45,7 @@ class HybridRetrievalService:
         query_tokens = normalize_arabic_text(query_text).split()
 
         # Precompute corpus statistics for BM25
-        tokenized_docs: List[List[str]] = []
+        tokenized_docs: list[list[str]] = []
         for c in candidates:
             combined_doc_text = " ".join(
                 [
@@ -66,8 +66,8 @@ class HybridRetrievalService:
         N = len(tokenized_docs)
 
         # Stage 1 & 2: Compute Semantic Similarity & BM25 Keyword Scores
-        bm25_raw_scores: List[float] = []
-        semantic_scores: List[float] = []
+        bm25_raw_scores: list[float] = []
+        semantic_scores: list[float] = []
 
         for idx, c in enumerate(candidates):
             doc_tokens = tokenized_docs[idx]
@@ -79,7 +79,7 @@ class HybridRetrievalService:
         max_bm25 = max(bm25_raw_scores) if bm25_raw_scores and max(bm25_raw_scores) > 0 else 1.0
 
         # Stage 4 & 5: Hybrid Result Fusion + Cross-Encoder Reranking
-        scored_candidates: List[Dict[str, Any]] = []
+        scored_candidates: list[dict[str, Any]] = []
         for idx, c in enumerate(candidates):
             norm_bm25 = min(1.0, bm25_raw_scores[idx] / max_bm25)
             sem_score = semantic_scores[idx]
@@ -103,9 +103,9 @@ class HybridRetrievalService:
 
     def _compute_bm25(
         self,
-        query_tokens: List[str],
-        doc_tokens: List[str],
-        all_docs: List[List[str]],
+        query_tokens: list[str],
+        doc_tokens: list[str],
+        all_docs: list[list[str]],
         N: int,
         avg_dl: float,
     ) -> float:
@@ -127,9 +127,9 @@ class HybridRetrievalService:
     def _compute_semantic_similarity(
         self,
         nlp_result: NLPAnalysisResult,
-        chunk: Dict[str, Any],
-        query_tokens: List[str],
-        doc_tokens: List[str],
+        chunk: dict[str, Any],
+        query_tokens: list[str],
+        doc_tokens: list[str],
     ) -> float:
         """Computes dense concept & character n-gram cosine similarity."""
         if not query_tokens or not doc_tokens:
@@ -158,7 +158,7 @@ class HybridRetrievalService:
         return min(1.0, ngram_cos * 1.4 + intent_boost)
 
     def _cross_encoder_rerank(
-        self, nlp_result: NLPAnalysisResult, chunk: Dict[str, Any], hybrid_score: float
+        self, nlp_result: NLPAnalysisResult, chunk: dict[str, Any], hybrid_score: float
     ) -> float:
         """Cross-Encoder reranker scoring direct query-passage intent & subtype match."""
         if nlp_result.is_out_of_scope or nlp_result.is_legal_opinion_request:

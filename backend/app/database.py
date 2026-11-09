@@ -11,7 +11,7 @@ import sqlite3
 import tempfile
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.config import settings
 from app.models import SQLALCHEMY_AVAILABLE, Base
@@ -21,7 +21,7 @@ from app.seed_data import OFFICIAL_DOCUMENTS_SEED, SERVICE_CHUNKS_SEED
 class DatabaseManager:
     """Unified Database Manager supporting PostgreSQL (SQLAlchemy) and SQLite fallback."""
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         self.sqlite_path = db_path or settings.sqlite_fallback_path
         self.engine_type = "sqlite_fallback"
         self.sa_engine = None
@@ -185,7 +185,7 @@ class DatabaseManager:
         cur = conn.cursor()
         now_iso = datetime.utcnow().isoformat()
 
-        doc_id_map: Dict[str, int] = {}
+        doc_id_map: dict[str, int] = {}
         for doc in OFFICIAL_DOCUMENTS_SEED:
             cur.execute(
                 """
@@ -250,7 +250,7 @@ class DatabaseManager:
     # ------------------------------------------------------------------------
     # Document & Chunk Queries
     # ------------------------------------------------------------------------
-    def list_documents(self, service_category: Optional[str] = None) -> List[Dict[str, Any]]:
+    def list_documents(self, service_category: str | None = None) -> list[dict[str, Any]]:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         if service_category:
@@ -266,7 +266,7 @@ class DatabaseManager:
             r["is_official_verified"] = bool(r["is_official_verified"])
         return rows
 
-    def create_document(self, doc_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_document(self, doc_data: dict[str, Any]) -> dict[str, Any]:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         now_iso = datetime.utcnow().isoformat()
@@ -302,8 +302,8 @@ class DatabaseManager:
         return row
 
     def get_all_chunks_with_docs(
-        self, service_category: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        self, service_category: str | None = None
+    ) -> list[dict[str, Any]]:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         sql = """
@@ -340,8 +340,8 @@ class DatabaseManager:
         return rows
 
     def get_service_by_slug(
-        self, service_slug: str, sub_type: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        self, service_slug: str, sub_type: str | None = None
+    ) -> list[dict[str, Any]]:
         all_chunks = self.get_all_chunks_with_docs()
         matches = [c for c in all_chunks if c["service_slug"] == service_slug]
         if sub_type and sub_type != "general":
@@ -353,7 +353,7 @@ class DatabaseManager:
     # ------------------------------------------------------------------------
     # User & Session Management (Data Minimization Compliant - Slide 19)
     # ------------------------------------------------------------------------
-    def ensure_user(self, user_id: str) -> Dict[str, Any]:
+    def ensure_user(self, user_id: str) -> dict[str, Any]:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         now_iso = datetime.utcnow().isoformat()
@@ -374,8 +374,8 @@ class DatabaseManager:
         return user
 
     def get_or_create_session(
-        self, user_id: str, session_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, user_id: str, session_id: str | None = None
+    ) -> dict[str, Any]:
         self.ensure_user(user_id)
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
@@ -420,9 +420,9 @@ class DatabaseManager:
         self,
         session_id: str,
         awaiting: bool,
-        pending_intent: Optional[str] = None,
-        pending_service_slug: Optional[str] = None,
-        options: Optional[List[str]] = None,
+        pending_intent: str | None = None,
+        pending_service_slug: str | None = None,
+        options: list[str] | None = None,
     ) -> None:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
@@ -454,11 +454,11 @@ class DatabaseManager:
         session_id: str,
         role: str,
         message_text: str,
-        detected_intent: Optional[str] = None,
-        rewritten_query: Optional[str] = None,
-        decision_type: Optional[str] = None,
+        detected_intent: str | None = None,
+        rewritten_query: str | None = None,
+        decision_type: str | None = None,
         confidence_score: float = 0.0,
-        citations: Optional[List[Dict[str, Any]]] = None,
+        citations: list[dict[str, Any]] | None = None,
         retrieval_time_ms: float = 0.0,
         total_latency_ms: float = 0.0,
     ) -> int:
@@ -492,7 +492,7 @@ class DatabaseManager:
         conn.close()
         return msg_id
 
-    def get_session_history(self, session_id: str) -> Dict[str, Any]:
+    def get_session_history(self, session_id: str) -> dict[str, Any]:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         cur.execute("SELECT * FROM chat_sessions WHERE session_id = ?", (session_id,))
@@ -536,7 +536,7 @@ class DatabaseManager:
         doc_code_a: str,
         doc_code_b: str,
         conflict_description: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         now_iso = datetime.utcnow().isoformat()
@@ -555,7 +555,7 @@ class DatabaseManager:
         conn.close()
         return row
 
-    def list_contradiction_flags(self) -> List[Dict[str, Any]]:
+    def list_contradiction_flags(self) -> list[dict[str, Any]]:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         cur.execute("SELECT * FROM contradiction_flags ORDER BY id DESC")
@@ -565,7 +565,7 @@ class DatabaseManager:
 
     def resolve_contradiction_flag(
         self, flag_id: int, resolution_notes: str, preferred_doc_code: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         now_iso = datetime.utcnow().isoformat()
@@ -584,7 +584,7 @@ class DatabaseManager:
         conn.close()
         return dict(row) if row else None
 
-    def save_feedback(self, feedback: Dict[str, Any]) -> Dict[str, Any]:
+    def save_feedback(self, feedback: dict[str, Any]) -> dict[str, Any]:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         now_iso = datetime.utcnow().isoformat()
@@ -610,7 +610,7 @@ class DatabaseManager:
         conn.close()
         return row
 
-    def save_evaluation_run(self, summary: Dict[str, Any]) -> None:
+    def save_evaluation_run(self, summary: dict[str, Any]) -> None:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         now_iso = datetime.utcnow().isoformat()
@@ -644,7 +644,7 @@ class DatabaseManager:
         conn.commit()
         conn.close()
 
-    def get_latest_evaluation_run(self) -> Optional[Dict[str, Any]]:
+    def get_latest_evaluation_run(self) -> dict[str, Any] | None:
         conn = self._get_sqlite_conn()
         cur = conn.cursor()
         cur.execute("SELECT * FROM evaluation_runs ORDER BY id DESC LIMIT 1")

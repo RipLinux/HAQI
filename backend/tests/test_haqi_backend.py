@@ -16,11 +16,12 @@ Tests:
 """
 
 import unittest
+
 from fastapi.testclient import TestClient
 
-from main import app
 from app.services.evidence_validator import evidence_validator
 from app.services.nlp_integration import nlp_service
+from main import app
 
 
 class TestHaqiBackend(unittest.TestCase):

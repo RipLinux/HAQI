@@ -1,14 +1,15 @@
 """API contract (owner: Maha). Request/Response models used by FastAPI endpoints and the Frontend.
 Moved from app/schemas.py; app/schemas.py now re-exports everything so old imports keep working."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
 class HaqiBaseModel(BaseModel):
     """Base schema providing unified `.model_dump()` across Pydantic v1 and v2."""
 
-    def model_dump(self, *args, **kwargs) -> Dict[str, Any]:
+    def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         if hasattr(super(), "model_dump"):
             return super().model_dump(*args, **kwargs)
         return self.dict(*args, **kwargs)
@@ -54,14 +55,14 @@ class StructuredGuidance(HaqiBaseModel):
     """Matches Slide 16: إجابة حقي المهيكلة."""
 
     specific_service: str = Field(..., description="الخدمة المحددة")
-    procedural_steps: List[str] = Field(
+    procedural_steps: list[str] = Field(
         default_factory=list, description="الخطوات الإجرائية"
     )
-    required_documents: List[str] = Field(
+    required_documents: list[str] = Field(
         default_factory=list, description="قائمة المستندات"
     )
     responsible_authority: str = Field(..., description="الجهة المسؤولة")
-    fees_and_duration: Optional[str] = Field(
+    fees_and_duration: str | None = Field(
         default=None, description="الرسوم والمدة الزمنية"
     )
     reference_and_verification: str = Field(..., description="المرجع وحالة التحقق")
@@ -79,8 +80,8 @@ class ChatRequest(HaqiBaseModel):
         ..., description="سؤال المواطن باللغة العربية الفصحى أو العامية المصرية"
     )
     user_id: str = Field(default="guest_user", description="معرف المستخدم")
-    session_id: Optional[str] = Field(default=None, description="معرف جلسة المحادثة")
-    service_category: Optional[str] = Field(
+    session_id: str | None = Field(default=None, description="معرف جلسة المحادثة")
+    service_category: str | None = Field(
         default=None, description="تصفية اختيارية حسب فئة الخدمة"
     )
 
@@ -90,15 +91,15 @@ class NLPAnalysisResult(HaqiBaseModel):
 
     original_text: str
     normalized_text: str
-    detected_dialect_terms: Dict[str, str] = Field(default_factory=dict)
+    detected_dialect_terms: dict[str, str] = Field(default_factory=dict)
     extracted_intent: str
     extracted_intent_ar: str
-    sub_type: Optional[str] = None
-    entities: Dict[str, Any] = Field(default_factory=dict)
+    sub_type: str | None = None
+    entities: dict[str, Any] = Field(default_factory=dict)
     structured_search_query: str
     needs_clarification: bool = False
-    clarification_question: Optional[str] = None
-    clarification_options: List[str] = Field(default_factory=list)
+    clarification_question: str | None = None
+    clarification_options: list[str] = Field(default_factory=list)
     is_legal_opinion_request: bool = False
     is_out_of_scope: bool = False
 
@@ -117,8 +118,8 @@ class EvidenceValidationReport(HaqiBaseModel):
     grounding_score: float
     freshness_status: str
     contradiction_detected: bool = False
-    contradiction_details: Optional[str] = None
-    abstention_reason: Optional[str] = None
+    contradiction_details: str | None = None
+    abstention_reason: str | None = None
 
 
 class ChatResponse(HaqiBaseModel):
@@ -130,14 +131,14 @@ class ChatResponse(HaqiBaseModel):
         ..., description="answered | clarification_needed | safe_abstention"
     )
     answer: str
-    structured_guidance: Optional[StructuredGuidance] = None
-    clarification_question: Optional[str] = None
-    clarification_options: List[str] = Field(default_factory=list)
-    sources: List[str] = Field(default_factory=list)
-    citations: List[SourceCitation] = Field(default_factory=list)
+    structured_guidance: StructuredGuidance | None = None
+    clarification_question: str | None = None
+    clarification_options: list[str] = Field(default_factory=list)
+    sources: list[str] = Field(default_factory=list)
+    citations: list[SourceCitation] = Field(default_factory=list)
     nlp_analysis: NLPAnalysisResult
     evidence_validation: EvidenceValidationReport
-    metrics: Dict[str, float] = Field(default_factory=dict)
+    metrics: dict[str, float] = Field(default_factory=dict)
 
 
 # ============================================================================
@@ -148,8 +149,8 @@ class EligibilityCheckRequest(HaqiBaseModel):
         default="general",
         description="نوع الإجراء الفرعي (first_time, renewal, replacement, general)",
     )
-    age: Optional[int] = Field(default=None, description="عمر المتقدم بالسنوات")
-    available_documents: List[str] = Field(
+    age: int | None = Field(default=None, description="عمر المتقدم بالسنوات")
+    available_documents: list[str] = Field(
         default_factory=list, description="قائمة المستندات المتوفرة لدى المواطن حالياً"
     )
 
@@ -159,10 +160,10 @@ class EligibilityCheckResponse(HaqiBaseModel):
     service_name_ar: str
     sub_type: str
     is_eligible: bool
-    eligibility_notes: List[str]
-    required_documents: List[str]
-    matched_documents: List[str]
-    missing_documents: List[str]
+    eligibility_notes: list[str]
+    required_documents: list[str]
+    matched_documents: list[str]
+    missing_documents: list[str]
     readiness_percentage: float
     official_reference: SourceCitation
 
@@ -172,8 +173,8 @@ class EligibilityCheckResponse(HaqiBaseModel):
 # ============================================================================
 class StandaloneValidationRequest(HaqiBaseModel):
     question: str
-    candidate_chunk_ids: Optional[List[str]] = None
-    proposed_answer: Optional[str] = None
+    candidate_chunk_ids: list[str] | None = None
+    proposed_answer: str | None = None
 
 
 # ============================================================================
@@ -186,10 +187,10 @@ class ContradictionResolveRequest(HaqiBaseModel):
 
 class FeedbackRequest(HaqiBaseModel):
     session_id: str
-    message_id: Optional[int] = None
+    message_id: int | None = None
     rating: int = Field(..., ge=1, le=5)
     is_helpful: bool = True
-    comment: Optional[str] = None
+    comment: str | None = None
 
 
 # ============================================================================
@@ -213,4 +214,4 @@ class EvaluationMetricsSummary(HaqiBaseModel):
     # 4. الأداء الزمني (Temporal Performance)
     avg_retrieval_time_ms: float
     avg_response_latency_ms: float
-    case_results: List[Dict[str, Any]] = Field(default_factory=list)
+    case_results: list[dict[str, Any]] = Field(default_factory=list)
