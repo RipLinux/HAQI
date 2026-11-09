@@ -108,3 +108,13 @@ Desktop.ini
 
 # Local environment overrides
 *.local
+
+# Ingestion data (don't commit large/government files)
+data/raw/*
+data/interim/*
+data/processed/*
+data/evaluation/ingestion/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+!data/evaluation/ingestion/.gitkeep
