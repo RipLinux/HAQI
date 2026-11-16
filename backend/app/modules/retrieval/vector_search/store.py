@@ -1,3 +1,4 @@
+
 """Database integration boundary for pgvector.
 
 The table and column names are provisional until Maha's canonical ORM mapping is
@@ -5,6 +6,7 @@ available. The adapter accepts an existing SQLAlchemy session and does not creat
 an engine or ORM model.
 """
 
+import math
 import re
 from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
@@ -14,6 +16,7 @@ from sqlalchemy import text
 
 from app.contracts.retrieval import RetrievalMethod, RetrievedChunk
 
+
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
@@ -21,19 +24,44 @@ class VectorStore(Protocol):
     async def add_embeddings(self, rows: Sequence[Mapping[str, Any]]) -> None: ...
 
     async def search(
-        self, vector: Sequence[float], top_k: int, filters: Mapping[str, str] | None = None
+        self,
+        vector: Sequence[float],
+        top_k: int,
+        filters: Mapping[str, str] | None = None,
     ) -> list[RetrievedChunk]: ...
 
 
-def validate_vector(vector: Sequence[float], expected_dimension: int) -> list[float]:
+def validate_vector(
+    vector: Sequence[float],
+    expected_dimension: int,
+) -> list[float]:
+    if expected_dimension < 1:
+        raise ValueError("Expected dimension must be positive")
+
     values = list(vector)
+
     if len(values) != expected_dimension:
         raise ValueError(
             f"Vector dimension mismatch: expected {expected_dimension}, got {len(values)}"
         )
-    if not values or any(not isinstance(value, (int, float)) for value in values):
-        raise ValueError("Vector must contain numeric values")
-    return [float(value) for value in values]
+
+    validated: list[float] = []
+
+    for value in values:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError("Vector must contain numeric values")
+
+        try:
+            converted = float(value)
+        except (OverflowError, ValueError):
+            raise ValueError("Vector values must be finite numbers") from None
+
+        if not math.isfinite(converted):
+            raise ValueError("Vector values must be finite numbers")
+
+        validated.append(converted)
+
+    return validated
 
 
 def _vector_literal(vector: Sequence[float]) -> str:
@@ -63,8 +91,13 @@ class PgVectorStore:
             embedding_column,
             source_url_column,
         )
+
         if any(not _IDENTIFIER.fullmatch(identifier) for identifier in identifiers):
             raise ValueError("Table and column names must be simple SQL identifiers")
+
+        if dimension < 1:
+            raise ValueError("Embedding dimension must be positive")
+
         self.session = session
         self.table = table
         self.dimension = dimension
@@ -77,6 +110,7 @@ class PgVectorStore:
     async def add_embeddings(self, rows: Sequence[Mapping[str, Any]]) -> None:
         for row in rows:
             vector = validate_vector(row["embedding"], self.dimension)
+
             await self.session.execute(
                 text(
                     f"INSERT INTO {self.table} "
@@ -92,17 +126,26 @@ class PgVectorStore:
                     "source_url": row.get("source_url"),
                 },
             )
+
         await self.session.commit()
 
     async def search(
-        self, vector: Sequence[float], top_k: int, filters: Mapping[str, str] | None = None
+        self,
+        vector: Sequence[float],
+        top_k: int,
+        filters: Mapping[str, str] | None = None,
     ) -> list[RetrievedChunk]:
         if top_k < 1:
             raise ValueError("top_k must be positive")
+
         vector = validate_vector(vector, self.dimension)
+
         # Metadata filters are intentionally deferred until Maha confirms columns.
         if filters:
-            raise NotImplementedError("Metadata filters require the canonical Chunk mapping")
+            raise NotImplementedError(
+                "Metadata filters require the canonical Chunk mapping"
+            )
+
         result = await self.session.execute(
             text(
                 f"SELECT {self.chunk_id_column}, {self.document_id_column}, "
@@ -113,6 +156,7 @@ class PgVectorStore:
             ),
             {"embedding": _vector_literal(vector), "top_k": top_k},
         )
+
         return [
             RetrievedChunk(
                 chunk_id=UUID(str(row[0])),
