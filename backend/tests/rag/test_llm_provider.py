@@ -1,6 +1,5 @@
 
-from app.modules.rag.llm import LLMProvider, MockLLMProvider
-
+from app.modules.rag.llm import MockLLMProvider
 
 def test_mock_provider_returns_configured_response() -> None:
     provider = MockLLMProvider(response="HAQI test answer")

@@ -1,7 +1,6 @@
 
 """Offline mock provider for LLM tests."""
 
-from app.modules.rag.llm.base import LLMProvider
 
 
 class MockLLMProvider:
