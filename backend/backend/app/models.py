@@ -6,14 +6,12 @@ Contradiction Flags (Human-in-the-Loop, Slide 12 & 19), User Feedback,
 and Benchmark Evaluation Runs (Slide 18).
 """
 
-from datetime import date, datetime
-from typing import Optional
+from datetime import datetime
 
 try:
     from sqlalchemy import (
         Boolean,
         Column,
-        Date,
         DateTime,
         Float,
         ForeignKey,

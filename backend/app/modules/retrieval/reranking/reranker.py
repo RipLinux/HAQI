@@ -42,12 +42,15 @@ class CrossEncoderReranker:
     def rerank(self, query: str, candidates: Sequence[RetrievedChunk]) -> list[RetrievedChunk]:
         if not candidates:
             return []
+
         pairs = [(query, candidate.text or "") for candidate in candidates]
         scores = self._get_model().predict(pairs)
+
         ranked = sorted(
             zip(candidates, scores, strict=True),
             key=lambda item: (-float(item[1]), str(item[0].chunk_id)),
         )
+
         return [
             candidate.model_copy(
                 update={
