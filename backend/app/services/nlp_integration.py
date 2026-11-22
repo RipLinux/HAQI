@@ -9,11 +9,11 @@ Integrates Ahmed Rabie's Arabic NLP pipeline into the HAQI Backend:
 """
 
 import re
-
+from typing import Any, Dict, List, Optional
 from app.schemas import NLPAnalysisResult
 
 # Egyptian Colloquial to Formal Government Terminology Mapping (Slide 9)
-EGYPTIAN_DIALECT_MAP: dict[str, str] = {
+EGYPTIAN_DIALECT_MAP: Dict[str, str] = {
     "بطاقه": "بطاقة الرقم القومي",
     "بطاقة": "بطاقة الرقم القومي",
     "البطاقه": "بطاقة الرقم القومي",
@@ -74,6 +74,36 @@ OUT_OF_SCOPE_KEYWORDS: tuple = (
 )
 
 
+# Service metadata, used when a follow-up question reuses the previous service.
+INTENT_META: Dict[str, tuple] = {
+    "national_id_application": ("National ID Application (إصدار بطاقة رقم قومي)", "قطاع الأحوال المدنية"),
+    "birth_certificate": ("Birth Certificate Issuance (استخراج شهادة ميلاد مميكنة)", "قطاع الأحوال المدنية"),
+    "family_record": ("Family Record Issuance (استخراج قيد عائلي مميكن)", "قطاع الأحوال المدنية"),
+    "notary_power_of_attorney": ("Notary Power of Attorney (توكيل رسمي بالشهر العقاري)", "مصلحة الشهر العقاري والتوثيق"),
+    "social_pension_support": ("Social Solidarity Pension (تكافل وكرامة)", "وزارة التضامن الاجتماعي"),
+    "passport_service": ("Passport Issuance/Renewal (استخراج أو تجديد جواز السفر)", "الإدارة العامة للجوازات والهجرة والجنسية"),
+}
+
+# Which part of the answer the citizen is asking about (used for follow-up questions).
+ASPECT_KEYWORDS: Dict[str, tuple] = {
+    "documents": ("مستند", "ورق", "اوراق", "وثايق", "وثائق"),
+    "fees_duration": ("رسوم", "تكلف", "بكام", "فلوس", "مصاريف", "مده", "تستغرق", "هيخلص", "كام يوم"),
+    "steps": ("خطوات", "خطوه", "ازاي", "كيف", "طريقه"),
+    "authority": ("الجهه", "اروح فين", "فين اقدم", "مكتب"),
+}
+
+
+def detect_requested_aspect(norm: str) -> Optional[str]:
+    """Return 'documents' | 'fees_duration' | 'steps' | 'authority' when EXACTLY one
+    aspect is asked about; None when none or several (then the full answer is shown)."""
+    found = [
+        aspect
+        for aspect, words in ASPECT_KEYWORDS.items()
+        if any(normalize_arabic_text(w) in norm for w in words)
+    ]
+    return found[0] if len(found) == 1 else None
+
+
 def normalize_arabic_text(text: str) -> str:
     """Normalizes Arabic letters, strips diacritics (tashkeel), tatweel, and extra punctuation."""
     if not text:
@@ -99,8 +129,10 @@ class ArabicNLPService:
     def analyze_query(
         self,
         user_query: str,
-        pending_intent: str | None = None,
+        pending_intent: Optional[str] = None,
         awaiting_clarification: bool = False,
+        last_intent: Optional[str] = None,
+        last_sub_type: Optional[str] = None,
     ) -> NLPAnalysisResult:
         raw = user_query.strip()
         norm = normalize_arabic_text(raw)
@@ -131,7 +163,7 @@ class ArabicNLPService:
                 )
 
         # Detect dialect terms mapped to official concepts
-        detected_dialect: dict[str, str] = {}
+        detected_dialect: Dict[str, str] = {}
         for colloq, formal in EGYPTIAN_DIALECT_MAP.items():
             if normalize_arabic_text(colloq) in norm or colloq in raw:
                 detected_dialect[colloq] = formal
@@ -149,7 +181,7 @@ class ArabicNLPService:
         # Intent & Sub-type Classification
         intent = "unknown"
         intent_ar = "غير محدد (Unknown Intent)"
-        sub_type: str | None = "general"
+        sub_type: Optional[str] = "general"
         sector = "غير محدد"
 
         if any(w in norm for w in ("بطاقه", "بطاقتي", "رقم قومي", "الرقم القومي")):
@@ -178,10 +210,27 @@ class ArabicNLPService:
             intent_ar = "Passport Issuance/Renewal (استخراج أو تجديد جواز السفر)"
             sector = "الإدارة العامة للجوازات والهجرة والجنسية"
 
+        # ---- Conversation context (follow-up questions) ----
+        requested_aspect = detect_requested_aspect(norm)
+        used_context = False
+        if last_intent:
+            if intent == "unknown" and requested_aspect and not is_legal and not is_oos:
+                # e.g. "طب ايه المستندات المطلوبة؟" -> same service as the previous answer
+                intent = last_intent
+                intent_ar, sector = INTENT_META.get(last_intent, (intent_ar, sector))
+                sub_type = last_sub_type or "general"
+                used_context = True
+            elif intent == last_intent and sub_type is None and last_sub_type:
+                # same service, sub-type not repeated -> keep the previous sub-type
+                sub_type = last_sub_type
+                used_context = True
+        # Focus only matters for follow-ups about the SAME service as the last answer
+        focus = requested_aspect if (used_context or (last_intent and intent == last_intent)) else None
+
         # Determine if Clarification is needed (Slide 7 Step 4 & Slide 16 Example)
         needs_clarification = False
         clarification_question = None
-        clarification_options: list[str] = []
+        clarification_options: List[str] = []
 
         if intent == "national_id_application" and sub_type is None and not is_legal:
             needs_clarification = True
@@ -203,6 +252,10 @@ class ArabicNLPService:
             "sub_type": sub_type or "unspecified",
             "sector": sector,
         }
+        if focus:
+            entities["requested_aspect"] = focus
+        if used_context:
+            entities["used_conversation_context"] = "yes"
 
         return NLPAnalysisResult(
             original_text=raw,
@@ -220,7 +273,7 @@ class ArabicNLPService:
             is_out_of_scope=(is_oos or (intent == "unknown" and not is_legal)),
         )
 
-    def _detect_nid_subtype(self, raw: str, norm: str) -> str | None:
+    def _detect_nid_subtype(self, raw: str, norm: str) -> Optional[str]:
         if any(
             w in norm
             for w in ("اول مره", "لاول مره", "جديده", "15 سنه", "15 عام", "طالب", "سن 15")
@@ -247,7 +300,7 @@ class ArabicNLPService:
         return None
 
     def _build_structured_query(
-        self, intent: str, sub_type: str | None, sector: str, fallback_norm: str
+        self, intent: str, sub_type: Optional[str], sector: str, fallback_norm: str
     ) -> str:
         if intent == "national_id_application":
             if sub_type == "first_time":

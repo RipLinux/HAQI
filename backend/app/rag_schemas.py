@@ -130,6 +130,10 @@ class ChatResponse(HaqiBaseModel):
     decision_type: str = Field(
         ..., description="answered | clarification_needed | safe_abstention"
     )
+    focus: str | None = Field(
+        default=None,
+        description="documents | steps | fees_duration | authority (follow-up focus), else null",
+    )
     answer: str
     structured_guidance: StructuredGuidance | None = None
     clarification_question: str | None = None
