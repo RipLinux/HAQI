@@ -9,7 +9,7 @@ Integrates Ahmed Rabie's Arabic NLP pipeline into the HAQI Backend:
 """
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 from app.schemas import NLPAnalysisResult
 
 # Egyptian Colloquial to Formal Government Terminology Mapping (Slide 9)
