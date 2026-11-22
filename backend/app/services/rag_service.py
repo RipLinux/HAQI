@@ -1,17 +1,16 @@
-﻿"""
+"""
 End-to-End RAG Orchestrator & User Journey Service (Slide 7, 10, 16).
 Coordinates:
-Step 1: User Query (Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø³Ø¤Ø§Ù„ Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©)
-Step 2: Query Understanding (ÙÙ‡Ù… Ø§Ù„Ù‚ØµØ¯ ÙˆØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ù†Ø§Ù‚ØµØ© - Ahmed Rabie's module)
-Step 3: Document Retrieval (Ø§Ù„Ø¨Ø­Ø« Ø§Ù„Ù‡Ø¬ÙŠÙ† ÙÙŠ Ø§Ù„Ù…ØµØ§Ø¯Ø± Ø§Ù„Ø±Ø³Ù…ÙŠØ© - Anas's module)
-Step 4: Context Selection & Reranking (ØªØ±ØªÙŠØ¨ ÙˆØªØ¯Ù‚ÙŠÙ‚ Ø§Ù„Ø£Ø¯Ù„Ø©)
-Step 5: Evidence Validation & Safe Abstention (Ø§Ù„ØªØ­Ù‚Ù‚ ÙˆØ§Ù„Ø§Ù…ØªÙ†Ø§Ø¹ Ø§Ù„Ø¢Ù…Ù† - Maha & Hassan)
-Step 6: Grounded Answer Generation (ØªÙˆÙ„ÙŠØ¯ Ø¥Ø¬Ø§Ø¨Ø© Ù…Ù‡ÙŠÙƒÙ„Ø© Ù…Ø¨Ø³Ø·Ø©)
-Step 7: Source Citation & Session Logging (Ø¥Ø±ÙØ§Ù‚ Ø§Ù„Ù…ØµØ§Ø¯Ø± ÙˆØ§Ù„Ø®Ø·ÙˆØ§Øª ÙˆØ­ÙØ¸ Ø§Ù„Ø¬Ù„Ø³Ø©)
+Step 1: User Query (إدخال السؤال بالعربية)
+Step 2: Query Understanding (فهم القصد وتحديد المعلومات الناقصة - Ahmed Rabie's module)
+Step 3: Document Retrieval (البحث الهجين في المصادر الرسمية - Anas's module)
+Step 4: Context Selection & Reranking (ترتيب وتدقيق الأدلة)
+Step 5: Evidence Validation & Safe Abstention (التحقق والامتناع الآمن - Maha & Hassan)
+Step 6: Grounded Answer Generation (توليد إجابة مهيكلة مبسطة)
+Step 7: Source Citation & Session Logging (إرفاق المصادر والخطوات وحفظ الجلسة)
 """
 
 import time
-from typing import Optional
 from typing import Any, Dict, List, Optional
 
 from app.database import db_manager
@@ -79,7 +78,7 @@ class RAGOrchestratorService:
                 options=nlp_result.clarification_options,
             )
             total_latency_ms = round((time.perf_counter() - start_total) * 1000.0, 3)
-            answer_text = nlp_result.clarification_question or "ÙŠØ±Ø¬Ù‰ ØªÙˆØ¶ÙŠØ­ Ù†ÙˆØ¹ Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡ Ø§Ù„Ù…Ø·Ù„ÙˆØ¨."
+            answer_text = nlp_result.clarification_question or "يرجى توضيح نوع الإجراء المطلوب."
 
             db_manager.log_chat_message(
                 session_id=session_id,
@@ -104,7 +103,7 @@ class RAGOrchestratorService:
                 structured_guidance=None,
                 clarification_question=nlp_result.clarification_question,
                 clarification_options=nlp_result.clarification_options,
-                sources=["Ù‚Ø·Ø§Ø¹ Ø§Ù„Ø£Ø­ÙˆØ§Ù„ Ø§Ù„Ù…Ø¯Ù†ÙŠØ© - ÙˆØ²Ø§Ø±Ø© Ø§Ù„Ø¯Ø§Ø®Ù„ÙŠØ©"],
+                sources=["قطاع الأحوال المدنية - وزارة الداخلية"],
                 citations=[],
                 nlp_analysis=nlp_result,
                 evidence_validation=validation_report,
@@ -122,7 +121,7 @@ class RAGOrchestratorService:
             total_latency_ms = round((time.perf_counter() - start_total) * 1000.0, 3)
             abstention_msg = (
                 validation_report.abstention_reason
-                or "Ø§Ù…ØªÙ†Ø§Ø¹ Ø¢Ù…Ù†: Ù„Ø§ ØªØªÙˆÙØ± ÙˆØ«ÙŠÙ‚Ø© Ø±Ø³Ù…ÙŠØ© Ù…ÙˆØ«Ù‚Ø© Ù„Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø¹Ù„Ù‰ Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¤Ø§Ù„."
+                or "امتناع آمن: لا تتوفر وثيقة رسمية موثقة للإجابة على هذا السؤال."
             )
             db_manager.log_chat_message(
                 session_id=session_id,
@@ -164,13 +163,13 @@ class RAGOrchestratorService:
             last_updated=primary_chunk["last_updated"],
             verification_date=primary_chunk["verification_date"],
             version=primary_chunk["version"],
-            verification_status="Ù…ÙˆØ«Ù‚ Ø±Ø³Ù…ÙŠØ§Ù‹ (Verified Official Source)",
+            verification_status="موثق رسمياً (Verified Official Source)",
             relevance_score=primary_chunk["rerank_score"],
         )
 
         ref_summary = (
-            f"{primary_chunk['doc_title']} ({primary_chunk['original_url']}) â€” "
-            f"Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«: {primary_chunk['last_updated']} | ØªØ§Ø±ÙŠØ® Ø§Ù„ØªØ­Ù‚Ù‚: {primary_chunk['verification_date']}"
+            f"{primary_chunk['doc_title']} ({primary_chunk['original_url']}) — "
+            f"آخر تحديث: {primary_chunk['last_updated']} | تاريخ التحقق: {primary_chunk['verification_date']}"
         )
 
         structured_guidance = StructuredGuidance(
@@ -178,7 +177,7 @@ class RAGOrchestratorService:
             procedural_steps=primary_chunk["steps"],
             required_documents=primary_chunk["required_documents"],
             responsible_authority=primary_chunk["authority"],
-            fees_and_duration=f"Ø§Ù„Ø±Ø³ÙˆÙ…: {primary_chunk['fees_text']} | Ø§Ù„Ù…Ø¯Ø©: {primary_chunk['processing_time']}",
+            fees_and_duration=f"الرسوم: {primary_chunk['fees_text']} | المدة: {primary_chunk['processing_time']}",
             reference_and_verification=ref_summary,
         )
 
@@ -219,7 +218,7 @@ class RAGOrchestratorService:
             answer=formatted_answer,
             structured_guidance=structured_guidance,
             sources=[
-                f"{primary_chunk['authority']} â€” {primary_chunk['doc_title']} ({primary_chunk['original_url']})"
+                f"{primary_chunk['authority']} — {primary_chunk['doc_title']} ({primary_chunk['original_url']})"
             ],
             citations=[citation],
             nlp_analysis=nlp_result,
@@ -231,10 +230,10 @@ class RAGOrchestratorService:
         )
 
     _FOCUS_TITLES = {
-        "documents": "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…Ø³ØªÙ†Ø¯Ø§Øª Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø©",
-        "steps": "Ø§Ù„Ø®Ø·ÙˆØ§Øª Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¦ÙŠØ©",
-        "fees_duration": "Ø§Ù„Ø±Ø³ÙˆÙ… ÙˆØ§Ù„Ù…Ø¯Ø© Ø§Ù„Ø²Ù…Ù†ÙŠØ©",
-        "authority": "Ø§Ù„Ø¬Ù‡Ø© Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„Ø©",
+        "documents": "قائمة المستندات المطلوبة",
+        "steps": "الخطوات الإجرائية",
+        "fees_duration": "الرسوم والمدة الزمنية",
+        "authority": "الجهة المسؤولة",
     }
 
     def _focus_guidance(
@@ -265,9 +264,9 @@ class RAGOrchestratorService:
             else:
                 body = f"  {guidance.responsible_authority}"
             return (
-                f"â€¢ Ø§Ù„Ø®Ø¯Ù…Ø© Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©: {guidance.specific_service}\n"
-                f"â€¢ {self._FOCUS_TITLES[focus]}:\n{body}\n"
-                f"â€¢ Ø§Ù„Ù…Ø±Ø¬Ø¹ ÙˆØ­Ø§Ù„Ø© Ø§Ù„ØªØ­Ù‚Ù‚: {guidance.reference_and_verification}\n"
+                f"• الخدمة المحددة: {guidance.specific_service}\n"
+                f"• {self._FOCUS_TITLES[focus]}:\n{body}\n"
+                f"• المرجع وحالة التحقق: {guidance.reference_and_verification}\n"
                 f"* {guidance.methodological_note}"
             )
         steps_str = "\n".join(
@@ -275,12 +274,12 @@ class RAGOrchestratorService:
         )
         docs_str = "\n".join(f"  - {d}" for d in guidance.required_documents)
         return (
-            f"â€¢ Ø§Ù„Ø®Ø¯Ù…Ø© Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©: {guidance.specific_service}\n"
-            f"â€¢ Ø§Ù„Ø®Ø·ÙˆØ§Øª Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¦ÙŠØ©:\n{steps_str}\n"
-            f"â€¢ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…Ø³ØªÙ†Ø¯Ø§Øª Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø©:\n{docs_str}\n"
-            f"â€¢ Ø§Ù„Ø¬Ù‡Ø© Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„Ø©: {guidance.responsible_authority}\n"
-            f"â€¢ Ø§Ù„Ø±Ø³ÙˆÙ… ÙˆØ§Ù„Ù…Ø¯Ø© Ø§Ù„Ø²Ù…Ù†ÙŠØ©: {guidance.fees_and_duration}\n"
-            f"â€¢ Ø§Ù„Ù…Ø±Ø¬Ø¹ ÙˆØ­Ø§Ù„Ø© Ø§Ù„ØªØ­Ù‚Ù‚: {guidance.reference_and_verification}\n"
+            f"• الخدمة المحددة: {guidance.specific_service}\n"
+            f"• الخطوات الإجرائية:\n{steps_str}\n"
+            f"• قائمة المستندات المطلوبة:\n{docs_str}\n"
+            f"• الجهة المسؤولة: {guidance.responsible_authority}\n"
+            f"• الرسوم والمدة الزمنية: {guidance.fees_and_duration}\n"
+            f"• المرجع وحالة التحقق: {guidance.reference_and_verification}\n"
             f"* {guidance.methodological_note}"
         )
 
