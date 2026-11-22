@@ -49,6 +49,8 @@ class RAGOrchestratorService:
             user_query=request.question,
             pending_intent=session.get("pending_intent"),
             awaiting_clarification=session.get("awaiting_clarification", False),
+            last_intent=session.get("last_intent"),
+            last_sub_type=session.get("last_sub_type"),
         )
 
         # 3 & 4. Hybrid Retrieval & Cross-Encoder Reranking (Slide 11)
@@ -179,7 +181,10 @@ class RAGOrchestratorService:
             reference_and_verification=ref_summary,
         )
 
-        formatted_answer = self._format_arabic_answer(structured_guidance)
+        # Follow-up questions: return ONLY the part the citizen asked about
+        focus = (nlp_result.entities or {}).get("requested_aspect")
+        structured_guidance = self._focus_guidance(structured_guidance, focus)
+        formatted_answer = self._format_arabic_answer(structured_guidance, focus)
         total_latency_ms = round((time.perf_counter() - start_total) * 1000.0, 3)
 
         db_manager.log_chat_message(
@@ -195,12 +200,21 @@ class RAGOrchestratorService:
             total_latency_ms=total_latency_ms,
         )
 
+        # Remember the answered service so the next follow-up question has context
+        if nlp_result.extracted_intent and nlp_result.extracted_intent != "unknown":
+            db_manager.set_session_context(
+                session_id=session_id,
+                intent=nlp_result.extracted_intent,
+                sub_type=nlp_result.sub_type,
+            )
+
         return ChatResponse(
             status="success",
             session_id=session_id,
             user_id=request.user_id,
             received_question=request.question,
             decision_type="answered",
+            focus=focus,
             answer=formatted_answer,
             structured_guidance=structured_guidance,
             sources=[
@@ -215,7 +229,46 @@ class RAGOrchestratorService:
             },
         )
 
-    def _format_arabic_answer(self, guidance: StructuredGuidance) -> str:
+    _FOCUS_TITLES = {
+        "documents": "قائمة المستندات المطلوبة",
+        "steps": "الخطوات الإجرائية",
+        "fees_duration": "الرسوم والمدة الزمنية",
+        "authority": "الجهة المسؤولة",
+    }
+
+    def _focus_guidance(
+        self, guidance: StructuredGuidance, focus: Optional[str]
+    ) -> StructuredGuidance:
+        """Blank the sections the citizen did not ask about (keeps service, authority, reference)."""
+        if focus not in self._FOCUS_TITLES:
+            return guidance
+        data = guidance.model_dump()
+        if focus != "steps":
+            data["procedural_steps"] = []
+        if focus != "documents":
+            data["required_documents"] = []
+        if focus != "fees_duration":
+            data["fees_and_duration"] = ""
+        return StructuredGuidance(**data)
+
+    def _format_arabic_answer(
+        self, guidance: StructuredGuidance, focus: Optional[str] = None
+    ) -> str:
+        if focus in self._FOCUS_TITLES:
+            if focus == "steps":
+                body = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(guidance.procedural_steps))
+            elif focus == "documents":
+                body = "\n".join(f"  - {d}" for d in guidance.required_documents)
+            elif focus == "fees_duration":
+                body = f"  {guidance.fees_and_duration}"
+            else:
+                body = f"  {guidance.responsible_authority}"
+            return (
+                f"• الخدمة المحددة: {guidance.specific_service}\n"
+                f"• {self._FOCUS_TITLES[focus]}:\n{body}\n"
+                f"• المرجع وحالة التحقق: {guidance.reference_and_verification}\n"
+                f"* {guidance.methodological_note}"
+            )
         steps_str = "\n".join(
             f"  {i+1}. {s}" for i, s in enumerate(guidance.procedural_steps)
         )

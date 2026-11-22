@@ -26,6 +26,7 @@ class DatabaseManager:
         self.engine_type = "sqlite_fallback"
         self.sa_engine = None
         self._init_storage()
+        self._migrate_sessions_table()
         self.seed_initial_data()
 
     def _get_sqlite_conn(self) -> sqlite3.Connection:
@@ -102,6 +103,8 @@ class DatabaseManager:
                 user_id TEXT NOT NULL,
                 pending_intent TEXT,
                 pending_service_slug TEXT,
+                last_intent TEXT,
+                last_sub_type TEXT,
                 awaiting_clarification INTEGER NOT NULL DEFAULT 0,
                 clarification_options_json TEXT DEFAULT '[]',
                 is_active INTEGER NOT NULL DEFAULT 1,
@@ -178,6 +181,19 @@ class DatabaseManager:
             conn = self._get_sqlite_conn()
             conn.executescript(schema_ddl)
             conn.commit()
+            conn.close()
+
+    def _migrate_sessions_table(self) -> None:
+        """Add conversation-context columns to an EXISTING sqlite file.
+        (CREATE TABLE IF NOT EXISTS never alters a table that already exists.)"""
+        conn = self._get_sqlite_conn()
+        try:
+            cols = {row["name"] for row in conn.execute("PRAGMA table_info(chat_sessions)")}
+            for col in ("last_intent", "last_sub_type"):
+                if col not in cols:
+                    conn.execute(f"ALTER TABLE chat_sessions ADD COLUMN {col} TEXT")
+            conn.commit()
+        finally:
             conn.close()
 
     def seed_initial_data(self) -> None:
@@ -448,6 +464,21 @@ class DatabaseManager:
         )
         conn.commit()
         conn.close()
+
+    def set_session_context(
+        self, session_id: str, intent: Optional[str], sub_type: Optional[str]
+    ) -> None:
+        """Remember the last answered service so follow-up questions can reuse it."""
+        conn = self._get_sqlite_conn()
+        try:
+            conn.execute(
+                "UPDATE chat_sessions SET last_intent = ?, last_sub_type = ?, updated_at = ? "
+                "WHERE session_id = ?",
+                (intent, sub_type, datetime.utcnow().isoformat(), session_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
 
     def log_chat_message(
         self,
