@@ -1,3 +1,4 @@
+
 import json
 from pathlib import Path
 
@@ -16,14 +17,11 @@ PDF_DIR = RAW_DIR / "pdf"
 HTML_DIR = RAW_DIR / "html"
 
 OUTPUT_DIR = PROJECT_ROOT / "data" / "processed"
-
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def get_category(file_path: Path, base_dir: Path) -> str:
-    """
-    تحديد نوع الملف حسب المجلد الموجود بداخله.
-    """
+    """تحديد نوع الملف حسب المجلد الموجود بداخله."""
 
     relative_parts = [
         part.lower()
@@ -39,7 +37,7 @@ def get_category(file_path: Path, base_dir: Path) -> str:
     return "other"
 
 
-def process_pdf_files(output):
+def process_pdf_files(output) -> int:
     total_chunks = 0
 
     if not PDF_DIR.exists():
@@ -51,7 +49,6 @@ def process_pdf_files(output):
     print(f"\nFound {len(pdf_files)} PDF files.")
 
     for pdf_file in pdf_files:
-
         category = get_category(pdf_file, PDF_DIR)
 
         print(f"\nProcessing PDF: {pdf_file.name}")
@@ -65,7 +62,6 @@ def process_pdf_files(output):
                 continue
 
             for page in pages:
-
                 cleaned_text = clean_arabic_text(page["text"])
 
                 if not cleaned_text:
@@ -74,7 +70,6 @@ def process_pdf_files(output):
                 chunks = chunk_text(cleaned_text)
 
                 for index, chunk in enumerate(chunks):
-
                     metadata = build_chunk_metadata(
                         file_path=str(pdf_file),
                         title=pdf_file.stem,
@@ -86,7 +81,7 @@ def process_pdf_files(output):
 
                     record = {
                         "text": chunk,
-                        "metadata": metadata
+                        "metadata": metadata,
                     }
 
                     output.write(
@@ -101,7 +96,7 @@ def process_pdf_files(output):
     return total_chunks
 
 
-def process_html_files(output):
+def process_html_files(output) -> int:
     total_chunks = 0
 
     if not HTML_DIR.exists():
@@ -114,7 +109,6 @@ def process_html_files(output):
     print(f"\nFound {len(html_files)} HTML files.")
 
     for html_file in html_files:
-
         category = get_category(html_file, HTML_DIR)
 
         print(f"\nProcessing HTML: {html_file.name}")
@@ -132,7 +126,6 @@ def process_html_files(output):
             chunks = chunk_text(cleaned_text)
 
             for index, chunk in enumerate(chunks):
-
                 metadata = build_chunk_metadata(
                     file_path=str(html_file),
                     title=document["title"],
@@ -143,7 +136,7 @@ def process_html_files(output):
 
                 record = {
                     "text": chunk,
-                    "metadata": metadata
+                    "metadata": metadata,
                 }
 
                 output.write(
@@ -158,14 +151,12 @@ def process_html_files(output):
     return total_chunks
 
 
-def process_documents():
-
+def process_documents() -> None:
     output_file = OUTPUT_DIR / "chunks.jsonl"
 
     print("Starting document processing...")
 
     with output_file.open("w", encoding="utf-8") as output:
-
         pdf_chunks = process_pdf_files(output)
         html_chunks = process_html_files(output)
 
