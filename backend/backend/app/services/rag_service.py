@@ -11,7 +11,7 @@ Step 7: Source Citation & Session Logging (إرفاق المصادر والخط�
 """
 
 import time
-
+from typing import Optional
 from app.database import db_manager
 from app.schemas import (
     ChatRequest,

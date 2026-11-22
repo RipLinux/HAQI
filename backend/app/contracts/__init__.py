@@ -1,1 +1,1 @@
-"""Shared Pydantic contracts exchanged between application modules."""
+"""Shared contracts package. Each module here is owned by one team member (see CODEOWNERS)."""
