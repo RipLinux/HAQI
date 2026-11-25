@@ -1,6 +1,7 @@
 """Document contracts produced by ingestion."""
 
 from datetime import date
+
 from pydantic import Field, HttpUrl
 
 from app.contracts.common import IdentifiedModel, Metadata

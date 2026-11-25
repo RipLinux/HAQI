@@ -6,6 +6,7 @@ from app.contracts.common import ContractModel
 from app.contracts.query import UserQuery
 from app.contracts.retrieval import RetrievedChunk
 
+
 class RagInput(ContractModel):
     query: UserQuery
     context: list[RetrievedChunk] = Field(default_factory=list)
