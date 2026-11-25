@@ -109,6 +109,9 @@ Desktop.ini
 # Local environment overrides
 *.local
 
+# TypeScript build cache
+*.tsbuildinfo
+
 # Ingestion data (don't commit large/government files)
 data/raw/*
 data/interim/*

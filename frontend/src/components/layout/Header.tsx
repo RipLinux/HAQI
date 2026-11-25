@@ -1,0 +1,3 @@
+import { Link, NavLink } from "react-router-dom";
+function Header(){return <><div className="top-alert">نموذج تجريبي · معلومات إرشادية عامة وليست استشارة قانونية</div><header className="header"><div className="wrap nav"><Link className="brand" to="/"><span className="brand-mark">ح</span><span><b>حقي</b><small>HAQI</small></span></Link><nav><NavLink to="/" end>الرئيسية</NavLink><NavLink to="/services">دليل الخدمات</NavLink><NavLink to="/assistant">اسأل حقي</NavLink><NavLink to="/document-check">فحص المستندات</NavLink><NavLink to="/sources">المصادر والموثوقية</NavLink></nav><Link className="nav-cta" to="/assistant">اسأل حقي <span>←</span></Link></div></header></>}
+export default Header;

@@ -1,9 +1,16 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import App from "./App";
 import "./styles.css";
 
-function App() {
-  return <main dir="rtl"><h1>حقي | HAQI</h1><p>واجهة المشروع الأساسية قيد التطوير.</p></main>;
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error('Root element "#root" was not found.');
 }
 
-createRoot(document.getElementById("root")!).render(<React.StrictMode><App /></React.StrictMode>);
+createRoot(rootElement).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
