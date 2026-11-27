@@ -111,3 +111,12 @@ def test_citation_uses_original_source_url(context):
     assert result.answer.citations[0].source_url == (
         "https://example.gov.eg/apply"
     )
+def test_rejects_malformed_reference_even_with_valid_reference(context):
+    result = EvidenceValidator().validate(
+        "An ID is required [E1], and another claim [E-1].",
+        context,
+    )
+
+    assert result.valid is False
+    assert result.answer.abstained is True
+    assert result.answer.citations == []

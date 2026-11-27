@@ -1,4 +1,4 @@
-"""
+﻿"""
 Evidence Validation & Safe Abstention Engine (Slide 12, 19, 22).
 Developed by Maha in collaboration with Hassan (RAG Lead):
 - هوية المصدر (Source Identity): التحقق من تبعية الوثيقة لجهة رسمية معتمدة.
@@ -10,6 +10,7 @@ Developed by Maha in collaboration with Hassan (RAG Lead):
 """
 
 from datetime import datetime
+import re
 from typing import Any
 from urllib.parse import urlparse
 
@@ -203,6 +204,134 @@ class EvidenceValidationService:
                 )
                 return True, desc
         return False, None
+
+    @staticmethod
+    def _normalize_numeric_digits(text: str) -> str:
+        digit_map = str.maketrans(
+            "\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669"
+            "\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9",
+            "01234567890123456789",
+        )
+        return text.translate(digit_map)
+
+    def _has_unsupported_numeric_claim(
+        self,
+        top_chunk: dict[str, Any],
+        proposed_answer: str,
+    ) -> bool:
+        """Reject numeric claims not supported by their corresponding source field."""
+        answer = self._normalize_numeric_digits(proposed_answer)
+
+        claim_patterns = [
+            (
+                re.compile(
+                    r"(?:\u0627\u0644\u0631\u0633\u0648\u0645|\u0631\u0633\u0648\u0645|"
+                    r"\u0627\u0644\u062a\u0643\u0644\u0641\u0629|\u0627\u0644\u0645\u0628\u0644\u063a|"
+                    r"\u0642\u064a\u0645\u0629\s+\u0627\u0644\u0631\u0633\u0648\u0645)"
+                ),
+                "fees_text",
+            ),
+            (
+                re.compile(
+                    r"(?:\u0645\u062f\u0629\s+\u0627\u0644\u0625\u062c\u0631\u0627\u0621|"
+                    r"\u0627\u0644\u0645\u062f\u0629|\u0645\u062f\u0629|"
+                    r"\u0648\u0642\u062a\s+\u0627\u0644\u062a\u0646\u0641\u064a\u0630|"
+                    r"\u0641\u062a\u0631\u0629\s+\u0627\u0644\u062a\u0646\u0641\u064a\u0630)"
+                ),
+                "processing_time",
+            ),
+        ]
+
+        claims = []
+        for pattern, field in claim_patterns:
+            for match in pattern.finditer(answer):
+                claims.append((match.start(), match.end(), field))
+
+        claims.sort(key=lambda item: item[0])
+
+        for index, (_, start, field) in enumerate(claims):
+            end = claims[index + 1][0] if index + 1 < len(claims) else len(answer)
+            segment = answer[start:end]
+
+            # Stop at punctuation separating clauses or sentences.
+            segment = re.split(r"[\u060c,\u061b;.!?\u061f\n]", segment, maxsplit=1)[0]
+
+            answer_numbers = re.findall(r"\d+(?:[.,]\d+)?", segment)
+            if not answer_numbers:
+                continue
+
+            source_text = self._normalize_numeric_digits(
+                str(top_chunk.get(field) or "")
+            )
+            source_numbers = set(
+                re.findall(r"\d+(?:[.,]\d+)?", source_text)
+            )
+
+            if any(number not in source_numbers for number in answer_numbers):
+                return True
+
+        return False
+
+    def validate_generated_answer(
+        self,
+        top_chunk: dict[str, Any],
+        proposed_answer: str,
+    ) -> bool:
+        """Validate generated-answer grounding without rerunning safety checks."""
+        if self._has_unsupported_numeric_claim(top_chunk, proposed_answer):
+            return False
+
+        score = self._compute_generated_answer_grounding_score(
+            top_chunk,
+            proposed_answer,
+        )
+        return score >= settings.min_grounding_score
+
+    def _compute_generated_answer_grounding_score(
+        self,
+        top_chunk: dict[str, Any],
+        proposed_answer: str,
+    ) -> float:
+        """Compare generated-answer tokens against all available chunk evidence."""
+        if not proposed_answer or not proposed_answer.strip():
+            return 0.0
+
+        evidence_parts = [
+            str(top_chunk.get("service_name_ar") or ""),
+            str(top_chunk.get("chunk_text") or ""),
+            str(top_chunk.get("authority") or ""),
+            str(top_chunk.get("fees_text") or ""),
+            str(top_chunk.get("processing_time") or ""),
+        ]
+
+        for field in ("steps", "required_documents"):
+            value = top_chunk.get(field) or []
+            if isinstance(value, (list, tuple, set)):
+                evidence_parts.extend(str(item) for item in value)
+            else:
+                evidence_parts.append(str(value))
+
+        evidence_tokens = set(
+            normalize_arabic_text(" ".join(evidence_parts)).split()
+        )
+
+        answer_tokens = [
+            token
+            for token in normalize_arabic_text(proposed_answer).split()
+            if (len(token) > 2 or token.isdigit())
+            and not (
+                token.lower().startswith("e")
+                and token[1:].isdigit()
+            )
+        ]
+
+        if not answer_tokens:
+            return 0.0
+
+        overlap = sum(
+            1 for token in answer_tokens if token in evidence_tokens
+        )
+        return round(overlap / len(answer_tokens), 4)
 
     def _compute_grounding_score(
         self, top_chunk: dict[str, Any], proposed_answer: str | None = None

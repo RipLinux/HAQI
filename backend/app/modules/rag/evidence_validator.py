@@ -33,6 +33,23 @@ class EvidenceValidator:
         if not answer_text or not answer_text.strip():
             return self._abstain("The generated answer is empty.")
 
+        # Reject malformed evidence references instead of silently ignoring them.
+        evidence_tokens = re.findall(r"\[E[^\]]*\]", answer_text)
+
+        malformed_references = [
+            token
+            for token in evidence_tokens
+            if not EVIDENCE_PATTERN.fullmatch(token)
+        ]
+
+        if malformed_references:
+            return self._abstain(
+                "The answer contains malformed evidence references.",
+                invalid_ids=tuple(
+                    token[1:-1] for token in malformed_references
+                ),
+            )
+
         evidence_ids = EVIDENCE_PATTERN.findall(answer_text)
 
         if not evidence_ids:

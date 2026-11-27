@@ -46,14 +46,14 @@ The system is designed around three principles:
 <a id="project-status"></a>
 ## 🚦 Project Status | حالة المشروع
 
-> **Current stage: Frontend prototype. The complete AI-backed service is not yet presented as production-ready.**
+> **Current stage: A local RAG-backed API and a separate frontend prototype. The service is not presented as production-ready.**
 
 | Component | Current status | Notes |
 |---|---|---|
 | Arabic RTL frontend | 🟢 Prototype available | A live interface prototype is available for review. |
-| Chat responses | 🟡 Simulated | The current demo uses illustrative responses; it is not connected to live government data. |
-| Backend API | 🔧 MVP scope | FastAPI is part of the target architecture. |
-| Knowledge base & RAG | 🔧 MVP scope | Official-document ingestion, PostgreSQL/pgvector, hybrid retrieval, and evidence validation are within the planned MVP scope. |
+| Chat responses | 🟡 Different by entry point | The Lovable prototype uses illustrative responses. The repository's `/api/v1/chat` endpoint runs the RAG-backed service in `backend/main.py`. |
+| Backend API | 🟢 Active local service | `backend/main.py` serves chat, sessions, service lookup, validation, and evaluation routes. It uses configured local HAQI data, not live government systems. |
+| Knowledge base & RAG | 🟡 Local implementation | The active flow analyzes the query, retrieves and validates evidence, returns deterministic guidance, and optionally uses a configured LLM. |
 
 <div dir="rtl" align="right">
 
@@ -62,6 +62,8 @@ The system is designed around three principles:
 الرابط يعرض تجربة الواجهة العربية واتجاه الكتابة من اليمين إلى اليسار (RTL). المحادثة في النسخة الحالية تجريبية، ولا تتصل بقاعدة بيانات حكومية أو بمحرك RAG فعلي.
 
 </div>
+
+The Lovable link is a frontend-only prototype; it remains simulated and is not connected to this repository's backend.
 
 ### ⚠️ Important Disclaimer | إخلاء مسؤولية
 
@@ -276,14 +278,18 @@ Install dependencies and start the API:
 
 ```bash
 uv sync --extra dev
-uv run uvicorn app.main:app --reload --port 8000
+uv run uvicorn main:app --reload --port 8000
 ```
 
 When the API is running, open the interactive documentation at:
 
 [http://localhost:8000/docs](http://localhost:8000/docs)
 
-The process health endpoint is [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health). It reports only that the API process is running.
+This starts the RAG-backed API entry point in `backend/main.py`. The separate `app.main:app` foundation entry point still returns `501 Not Implemented` for chat.
+
+The process health endpoint is [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health). It reports API and local data-store health, not whether a live government source is available.
+
+LLM generation is disabled by default. For a local backend process, set `HAQI_LLM_PROVIDER=openai` and provide `OPENAI_API_KEY` through the process environment to enable it. `HAQI_LLM_MODEL` is optional and defaults to `gpt-4o-mini`. If generation fails or its response fails validation, the service keeps its deterministic answer. Docker Compose currently does not pass these LLM variables to the backend container.
 
 ### 5. Set up the frontend
 
@@ -297,9 +303,9 @@ npm run dev
 
 Use the local URL printed by the frontend development server.
 
-> Chat and government-service routes intentionally return `501 Not Implemented` until later project stages.
+The local backend's `/api/v1/chat` route is active. The linked Lovable prototype remains simulated and separate from that API.
 
-See [`docs/setup.md`](docs/setup.md), [`docs/architecture.md`](docs/architecture.md), and [`docs/data-contracts.md`](docs/data-contracts.md) for the foundation details.
+See [`docs/setup.md`](docs/setup.md), [`docs/architecture.md`](docs/architecture.md), and [`docs/data-contracts.md`](docs/data-contracts.md) for setup, the active backend flow, and shared contracts.
 
 ## 📊 Evaluation Methodology | منهجية التقييم
 

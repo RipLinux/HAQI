@@ -1,15 +1,17 @@
+
 """
 End-to-End RAG Orchestrator & User Journey Service (Slide 7, 10, 16).
 Coordinates:
-Step 1: User Query (Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø³Ø¤Ø§Ù„ Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©)
-Step 2: Query Understanding (ÙÙ‡Ù… Ø§Ù„Ù‚ØµØ¯ ÙˆØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ù†Ø§Ù‚ØµØ© - Ahmed Rabie's module)
-Step 3: Document Retrieval (Ø§Ù„Ø¨Ø­Ø« Ø§Ù„Ù‡Ø¬ÙŠÙ† ÙÙŠ Ø§Ù„Ù…ØµØ§Ø¯Ø± Ø§Ù„Ø±Ø³Ù…ÙŠØ© - Anas's module)
-Step 4: Context Selection & Reranking (ØªØ±ØªÙŠØ¨ ÙˆØªØ¯Ù‚ÙŠÙ‚ Ø§Ù„Ø£Ø¯Ù„Ø©)
-Step 5: Evidence Validation & Safe Abstention (Ø§Ù„ØªØ­Ù‚Ù‚ ÙˆØ§Ù„Ø§Ù…ØªÙ†Ø§Ø¹ Ø§Ù„Ø¢Ù…Ù† - Maha & Hassan)
-Step 6: Grounded Answer Generation (ØªÙˆÙ„ÙŠØ¯ Ø¥Ø¬Ø§Ø¨Ø© Ù…Ù‡ÙŠÙƒÙ„Ø© Ù…Ø¨Ø³Ø·Ø©)
-Step 7: Source Citation & Session Logging (Ø¥Ø±ÙØ§Ù‚ Ø§Ù„Ù…ØµØ§Ø¯Ø± ÙˆØ§Ù„Ø®Ø·ÙˆØ§Øª ÙˆØ­ÙØ¸ Ø§Ù„Ø¬Ù„Ø³Ø©)
+Step 1: User Query
+Step 2: Query Understanding
+Step 3: Document Retrieval
+Step 4: Context Selection & Reranking
+Step 5: Evidence Validation & Safe Abstention
+Step 6: Grounded Answer Generation
+Step 7: Source Citation & Session Logging
 """
 
+import logging
 import time
 from typing import Optional
 
@@ -24,16 +26,29 @@ from app.services.evidence_validator import evidence_validator
 from app.services.nlp_integration import nlp_service
 from app.services.retrieval_integration import retrieval_service
 
+# Modular RAG imports
+from app.contracts.query import UserQuery
+from app.modules.retrieval.legacy_adapter import LegacyRetrievalAdapter
+from app.modules.rag.context_builder import ContextBuilder
+from app.modules.rag.answer_generator import AnswerGenerator
+from app.modules.rag.evidence_validator import (
+    EvidenceValidator as ModularEvidenceValidator,
+)
+from app.modules.rag.llm import create_llm_provider
+
+logger = logging.getLogger(__name__)
+
 
 class RAGOrchestratorService:
-    """Orchestrates the 7-stage RAG pipeline and 9-step citizen user journey."""
+    """Orchestrates the RAG pipeline and citizen user journey."""
 
     def process_citizen_query(self, request: ChatRequest) -> ChatResponse:
         start_total = time.perf_counter()
 
         # 1. User & Multi-turn Session Resolution
         session = db_manager.get_or_create_session(
-            user_id=request.user_id, session_id=request.session_id
+            user_id=request.user_id,
+            session_id=request.session_id,
         )
         session_id = session["session_id"]
 
@@ -44,7 +59,7 @@ class RAGOrchestratorService:
             message_text=request.question,
         )
 
-        # 2. Arabic NLP & Query Understanding (Slide 9)
+        # 2. Arabic NLP & Query Understanding
         nlp_result = nlp_service.analyze_query(
             user_query=request.question,
             pending_intent=session.get("pending_intent"),
@@ -53,22 +68,27 @@ class RAGOrchestratorService:
             last_sub_type=session.get("last_sub_type"),
         )
 
-        # 3 & 4. Hybrid Retrieval & Cross-Encoder Reranking (Slide 11)
+        # 3 & 4. Hybrid Retrieval & Reranking
         t_ret_start = time.perf_counter()
+
         retrieved_chunks = retrieval_service.retrieve_and_rerank(
             nlp_result=nlp_result,
             service_category_filter=request.service_category,
             top_k=3,
         )
-        retrieval_time_ms = round((time.perf_counter() - t_ret_start) * 1000.0, 3)
 
-        # 5. Evidence Validation & Safe Abstention (Slide 12)
+        retrieval_time_ms = round(
+            (time.perf_counter() - t_ret_start) * 1000.0,
+            3,
+        )
+
+        # 5. Initial Evidence Validation & Safe Abstention
         validation_report = evidence_validator.validate_evidence(
             nlp_result=nlp_result,
             retrieved_chunks=retrieved_chunks,
         )
 
-        # Handle Path 2a: Clarification Needed (Slide 7 Step 4 & Slide 16)
+        # Handle Path 2a: Clarification Needed
         if validation_report.decision_path == "path_2_clarification":
             db_manager.update_session_clarification(
                 session_id=session_id,
@@ -77,8 +97,16 @@ class RAGOrchestratorService:
                 pending_service_slug="national-id",
                 options=nlp_result.clarification_options,
             )
-            total_latency_ms = round((time.perf_counter() - start_total) * 1000.0, 3)
-            answer_text = nlp_result.clarification_question or "ÙŠØ±Ø¬Ù‰ ØªÙˆØ¶ÙŠØ­ Ù†ÙˆØ¹ Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡ Ø§Ù„Ù…Ø·Ù„ÙˆØ¨."
+
+            total_latency_ms = round(
+                (time.perf_counter() - start_total) * 1000.0,
+                3,
+            )
+
+            answer_text = (
+                nlp_result.clarification_question
+                or "يرجى توضيح نوع الإجراء المطلوب."
+            )
 
             db_manager.log_chat_message(
                 session_id=session_id,
@@ -103,7 +131,9 @@ class RAGOrchestratorService:
                 structured_guidance=None,
                 clarification_question=nlp_result.clarification_question,
                 clarification_options=nlp_result.clarification_options,
-                sources=["Ù‚Ø·Ø§Ø¹ Ø§Ù„Ø£Ø­ÙˆØ§Ù„ Ø§Ù„Ù…Ø¯Ù†ÙŠØ© - ÙˆØ²Ø§Ø±Ø© Ø§Ù„Ø¯Ø§Ø®Ù„ÙŠØ©"],
+                sources=[
+                    "قطاع الأحوال المدنية - وزارة الداخلية"
+                ],
                 citations=[],
                 nlp_analysis=nlp_result,
                 evidence_validation=validation_report,
@@ -113,16 +143,24 @@ class RAGOrchestratorService:
                 },
             )
 
-        # Clear any pending clarification state once resolved or abstained
-        db_manager.update_session_clarification(session_id=session_id, awaiting=False)
+        # Clear pending clarification state
+        db_manager.update_session_clarification(
+            session_id=session_id,
+            awaiting=False,
+        )
 
-        # Handle Path 2b: Safe Abstention (Slide 12 & 19)
+        # Handle Path 2b: Safe Abstention
         if not validation_report.is_sufficient:
-            total_latency_ms = round((time.perf_counter() - start_total) * 1000.0, 3)
+            total_latency_ms = round(
+                (time.perf_counter() - start_total) * 1000.0,
+                3,
+            )
+
             abstention_msg = (
                 validation_report.abstention_reason
-                or "Ø§Ù…ØªÙ†Ø§Ø¹ Ø¢Ù…Ù†: Ù„Ø§ ØªØªÙˆÙØ± ÙˆØ«ÙŠÙ‚Ø© Ø±Ø³Ù…ÙŠØ© Ù…ÙˆØ«Ù‚Ø© Ù„Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø¹Ù„Ù‰ Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¤Ø§Ù„."
+                or "امتناع آمن: لا تتوفر وثيقة رسمية موثقة للإجابة على هذا السؤال."
             )
+
             db_manager.log_chat_message(
                 session_id=session_id,
                 role="assistant",
@@ -135,6 +173,7 @@ class RAGOrchestratorService:
                 retrieval_time_ms=retrieval_time_ms,
                 total_latency_ms=total_latency_ms,
             )
+
             return ChatResponse(
                 status="abstention",
                 session_id=session_id,
@@ -153,8 +192,9 @@ class RAGOrchestratorService:
                 },
             )
 
-        # Handle Path 1: Verified Context -> Structured Grounded Answer (Slide 16)
+        # Handle Path 1: Verified Context
         primary_chunk = retrieved_chunks[0]
+
         citation = SourceCitation(
             doc_code=primary_chunk["doc_code"],
             title=primary_chunk["doc_title"],
@@ -163,13 +203,15 @@ class RAGOrchestratorService:
             last_updated=primary_chunk["last_updated"],
             verification_date=primary_chunk["verification_date"],
             version=primary_chunk["version"],
-            verification_status="Ù…ÙˆØ«Ù‚ Ø±Ø³Ù…ÙŠØ§Ù‹ (Verified Official Source)",
+            verification_status="موثق رسمياً (Verified Official Source)",
             relevance_score=primary_chunk["rerank_score"],
         )
 
         ref_summary = (
-            f"{primary_chunk['doc_title']} ({primary_chunk['original_url']}) â€” "
-            f"Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«: {primary_chunk['last_updated']} | ØªØ§Ø±ÙŠØ® Ø§Ù„ØªØ­Ù‚Ù‚: {primary_chunk['verification_date']}"
+            f"{primary_chunk['doc_title']} "
+            f"({primary_chunk['original_url']}) — "
+            f"آخر تحديث: {primary_chunk['last_updated']} | "
+            f"تاريخ التحقق: {primary_chunk['verification_date']}"
         )
 
         structured_guidance = StructuredGuidance(
@@ -177,16 +219,43 @@ class RAGOrchestratorService:
             procedural_steps=primary_chunk["steps"],
             required_documents=primary_chunk["required_documents"],
             responsible_authority=primary_chunk["authority"],
-            fees_and_duration=f"Ø§Ù„Ø±Ø³ÙˆÙ…: {primary_chunk['fees_text']} | Ø§Ù„Ù…Ø¯Ø©: {primary_chunk['processing_time']}",
+            fees_and_duration=(
+                f"الرسوم: {primary_chunk['fees_text']} | "
+                f"المدة: {primary_chunk['processing_time']}"
+            ),
             reference_and_verification=ref_summary,
         )
 
-        # Follow-up questions: return ONLY the part the citizen asked about
+        # Follow-up questions: return ONLY the requested aspect
         focus = (nlp_result.entities or {}).get("requested_aspect")
-        structured_guidance = self._focus_guidance(structured_guidance, focus)
-        formatted_answer = self._format_arabic_answer(structured_guidance, focus)
-        total_latency_ms = round((time.perf_counter() - start_total) * 1000.0, 3)
 
+        structured_guidance = self._focus_guidance(
+            structured_guidance,
+            focus,
+        )
+
+        # Deterministic fallback answer
+        formatted_answer = self._format_arabic_answer(
+            structured_guidance,
+            focus,
+        )
+
+        # 6. Optional Modular LLM Answer Generation
+        llm_answer = self._generate_llm_answer(
+            question=request.question,
+            nlp_result=nlp_result,
+            primary_chunk=primary_chunk,
+        )
+
+        if llm_answer:
+            formatted_answer = llm_answer
+
+        total_latency_ms = round(
+            (time.perf_counter() - start_total) * 1000.0,
+            3,
+        )
+
+        # 7. Source Citation & Session Logging
         db_manager.log_chat_message(
             session_id=session_id,
             role="assistant",
@@ -200,8 +269,11 @@ class RAGOrchestratorService:
             total_latency_ms=total_latency_ms,
         )
 
-        # Remember the answered service so the next follow-up question has context
-        if nlp_result.extracted_intent and nlp_result.extracted_intent != "unknown":
+        # Remember answered service for follow-up questions
+        if (
+            nlp_result.extracted_intent
+            and nlp_result.extracted_intent != "unknown"
+        ):
             db_manager.set_session_context(
                 session_id=session_id,
                 intent=nlp_result.extracted_intent,
@@ -218,7 +290,9 @@ class RAGOrchestratorService:
             answer=formatted_answer,
             structured_guidance=structured_guidance,
             sources=[
-                f"{primary_chunk['authority']} â€” {primary_chunk['doc_title']} ({primary_chunk['original_url']})"
+                f"{primary_chunk['authority']} — "
+                f"{primary_chunk['doc_title']} "
+                f"({primary_chunk['original_url']})"
             ],
             citations=[citation],
             nlp_analysis=nlp_result,
@@ -229,57 +303,201 @@ class RAGOrchestratorService:
             },
         )
 
+    def _generate_llm_answer(
+        self,
+        question: str,
+        nlp_result,
+        primary_chunk: dict,
+    ) -> Optional[str]:
+        """
+        Generate an optional answer using the modular RAG pipeline.
+
+        Returns None if the provider is disabled or any generation,
+        citation, or legacy grounding validation step fails.
+        """
+
+        try:
+            # Provider is disabled by default.
+            provider = create_llm_provider()
+
+            if provider is None:
+                return None
+
+            # Convert the verified legacy retrieval record.
+            retrieved = LegacyRetrievalAdapter.convert(
+                primary_chunk,
+                rank=1,
+            )
+
+            # Enrich the evidence with structured service information.
+            evidence_parts = [
+                retrieved.text or "",
+                f"Service: {primary_chunk.get('service_name_ar', '')}",
+                f"Authority: {primary_chunk.get('authority', '')}",
+                f"Steps: {primary_chunk.get('steps', [])}",
+                (
+                    "Required documents: "
+                    f"{primary_chunk.get('required_documents', [])}"
+                ),
+                f"Fees: {primary_chunk.get('fees_text', '')}",
+                (
+                    "Processing time: "
+                    f"{primary_chunk.get('processing_time', '')}"
+                ),
+            ]
+
+            retrieved = retrieved.model_copy(
+                update={
+                    "text": "\n".join(evidence_parts),
+                }
+            )
+
+            # Only one chunk is passed because the current API returns
+            # one primary citation.
+            context = ContextBuilder(
+                max_chunks=1,
+            ).build([retrieved])
+
+            query = UserQuery(
+                text=question,
+                language="ar",
+            )
+
+            # Generate the answer.
+            answer_text = AnswerGenerator(
+                provider=provider,
+            ).generate(
+                query=query,
+                context=context,
+            )
+
+            # Validate evidence identifiers such as [E1].
+            modular_validation = ModularEvidenceValidator().validate(
+                answer_text=answer_text,
+                context=context,
+            )
+
+            if (
+                not modular_validation.valid
+                or modular_validation.answer.abstained
+            ):
+                logger.warning(
+                    "Optional LLM answer rejected; using deterministic legacy fallback "
+                    "(reason=modular_evidence_validation_failed)"
+                )
+                return None
+
+            # Check generated-answer grounding only.
+            # Initial source, relevance, freshness, and contradiction
+            # validation has already succeeded in the main RAG flow.
+            is_grounded = evidence_validator.validate_generated_answer(
+                top_chunk=primary_chunk,
+                proposed_answer=modular_validation.answer.text,
+            )
+
+            if not is_grounded:
+                logger.warning(
+                    "Optional LLM answer rejected; using deterministic legacy fallback "
+                    "(reason=legacy_grounding_validation_failed)"
+                )
+                return None
+
+            return modular_validation.answer.text
+
+        except Exception as exc:
+            # The LLM is optional. Any failure must preserve the
+            # deterministic answer and must not break the API request.
+            # Omit exception text and traceback to avoid logging prompts,
+            # provider response data, or credentials.
+            logger.warning(
+                "Optional LLM generation failed; using deterministic legacy fallback "
+                "(error_type=%s)",
+                type(exc).__name__,
+            )
+            return None
+
     _FOCUS_TITLES = {
-        "documents": "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…Ø³ØªÙ†Ø¯Ø§Øª Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø©",
-        "steps": "Ø§Ù„Ø®Ø·ÙˆØ§Øª Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¦ÙŠØ©",
-        "fees_duration": "Ø§Ù„Ø±Ø³ÙˆÙ… ÙˆØ§Ù„Ù…Ø¯Ø© Ø§Ù„Ø²Ù…Ù†ÙŠØ©",
-        "authority": "Ø§Ù„Ø¬Ù‡Ø© Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„Ø©",
+        "documents": "قائمة المستندات المطلوبة",
+        "steps": "الخطوات الإجرائية",
+        "fees_duration": "الرسوم والمدة الزمنية",
+        "authority": "الجهة المسؤولة",
     }
 
     def _focus_guidance(
-        self, guidance: StructuredGuidance, focus: Optional[str]
+        self,
+        guidance: StructuredGuidance,
+        focus: Optional[str],
     ) -> StructuredGuidance:
-        """Blank the sections the citizen did not ask about (keeps service, authority, reference)."""
+        """Blank sections the citizen did not ask about."""
+
         if focus not in self._FOCUS_TITLES:
             return guidance
+
         data = guidance.model_dump()
+
         if focus != "steps":
             data["procedural_steps"] = []
+
         if focus != "documents":
             data["required_documents"] = []
+
         if focus != "fees_duration":
             data["fees_and_duration"] = ""
+
         return StructuredGuidance(**data)
 
     def _format_arabic_answer(
-        self, guidance: StructuredGuidance, focus: Optional[str] = None
+        self,
+        guidance: StructuredGuidance,
+        focus: Optional[str] = None,
     ) -> str:
+
         if focus in self._FOCUS_TITLES:
             if focus == "steps":
-                body = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(guidance.procedural_steps))
+                body = "\n".join(
+                    f"  {i + 1}. {step}"
+                    for i, step in enumerate(guidance.procedural_steps)
+                )
+
             elif focus == "documents":
-                body = "\n".join(f"  - {d}" for d in guidance.required_documents)
+                body = "\n".join(
+                    f"  - {document}"
+                    for document in guidance.required_documents
+                )
+
             elif focus == "fees_duration":
                 body = f"  {guidance.fees_and_duration}"
+
             else:
                 body = f"  {guidance.responsible_authority}"
+
             return (
-                f"â€¢ Ø§Ù„Ø®Ø¯Ù…Ø© Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©: {guidance.specific_service}\n"
-                f"â€¢ {self._FOCUS_TITLES[focus]}:\n{body}\n"
-                f"â€¢ Ø§Ù„Ù…Ø±Ø¬Ø¹ ÙˆØ­Ø§Ù„Ø© Ø§Ù„ØªØ­Ù‚Ù‚: {guidance.reference_and_verification}\n"
+                f"• الخدمة المحددة: {guidance.specific_service}\n"
+                f"• {self._FOCUS_TITLES[focus]}:\n"
+                f"{body}\n"
+                f"• المرجع وحالة التحقق: "
+                f"{guidance.reference_and_verification}\n"
                 f"* {guidance.methodological_note}"
             )
+
         steps_str = "\n".join(
-            f"  {i+1}. {s}" for i, s in enumerate(guidance.procedural_steps)
+            f"  {i + 1}. {step}"
+            for i, step in enumerate(guidance.procedural_steps)
         )
-        docs_str = "\n".join(f"  - {d}" for d in guidance.required_documents)
+
+        docs_str = "\n".join(
+            f"  - {document}"
+            for document in guidance.required_documents
+        )
+
         return (
-            f"â€¢ Ø§Ù„Ø®Ø¯Ù…Ø© Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©: {guidance.specific_service}\n"
-            f"â€¢ Ø§Ù„Ø®Ø·ÙˆØ§Øª Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¦ÙŠØ©:\n{steps_str}\n"
-            f"â€¢ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…Ø³ØªÙ†Ø¯Ø§Øª Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø©:\n{docs_str}\n"
-            f"â€¢ Ø§Ù„Ø¬Ù‡Ø© Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„Ø©: {guidance.responsible_authority}\n"
-            f"â€¢ Ø§Ù„Ø±Ø³ÙˆÙ… ÙˆØ§Ù„Ù…Ø¯Ø© Ø§Ù„Ø²Ù…Ù†ÙŠØ©: {guidance.fees_and_duration}\n"
-            f"â€¢ Ø§Ù„Ù…Ø±Ø¬Ø¹ ÙˆØ­Ø§Ù„Ø© Ø§Ù„ØªØ­Ù‚Ù‚: {guidance.reference_and_verification}\n"
+            f"• الخدمة المحددة: {guidance.specific_service}\n"
+            f"• الخطوات الإجرائية:\n{steps_str}\n"
+            f"• قائمة المستندات المطلوبة:\n{docs_str}\n"
+            f"• الجهة المسؤولة: {guidance.responsible_authority}\n"
+            f"• الرسوم والمدة الزمنية: {guidance.fees_and_duration}\n"
+            f"• المرجع وحالة التحقق: "
+            f"{guidance.reference_and_verification}\n"
             f"* {guidance.methodological_note}"
         )
 
